@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+WAP32_BEGIN_DECLS
+
 typedef struct Wap32Wwd Wap32Wwd;
 typedef struct Wap32WwdPlane Wap32WwdPlane;
 typedef struct Wap32WwdObject Wap32WwdObject;
@@ -56,5 +58,7 @@ WAP32_API void wap32_wwd_plane_set_fill_color(Wap32WwdPlane *plane, unsigned fil
 WAP32_API void wap32_wwd_plane_set_z_coord(Wap32WwdPlane *plane, unsigned z_coord);
 WAP32_API void wap32_wwd_plane_set_image_sets_count(Wap32WwdPlane *plane, unsigned count);
 WAP32_API void wap32_wwd_plane_set_image_set(Wap32WwdPlane *plane, unsigned image_set_index, const char *image_set);
+
+WAP32_END_DECLS
 
 #endif
