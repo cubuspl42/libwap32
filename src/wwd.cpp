@@ -1,21 +1,38 @@
 #include "wwd.h"
+#include "wwd_read.h"
+#include "errors.h"
 #include <cassert>
 #include <fstream>
+#include <memory>
 
-enum {
-	WWD_SIGNATURE = 0x05F4
-};
-
-int wap32_wwd_open(Wap32Wwd **out, const char *file_path)
+Wap32Wwd::Wap32Wwd()
 {
-	*out = nullptr;
-	auto wwd = new Wap32Wwd;
+    memset(&this->data, 0, sizeof(this->data));
+}
 
-	*out = wwd;
-	return 0;
+Wap32Wwd *wap32_wwd_create()
+{
+    return new Wap32Wwd;
 }
 
 void wap32_wwd_free(Wap32Wwd *wwd)
 {
 	delete wwd;
+}
+
+int wap32_wwd_open(Wap32Wwd **out, const char *file_path)
+{
+	*out = nullptr;
+    std::ifstream file(file_path, std::ios::binary);
+    std::vector<char> wwd_buffer((std::istreambuf_iterator<char>(file)),
+                                   std::istreambuf_iterator<char>());
+    std::unique_ptr<Wap32Wwd, void(*)(Wap32Wwd*)> wwd {wap32_wwd_create(), wap32_wwd_free};
+    try {
+        wap32_wwd__read(wwd.get(), wwd_buffer);
+    } catch (Wap32Exception &ex) {
+        return ex.error;
+    }
+    
+	*out = wwd.release();
+	return WAP32_OK;
 }

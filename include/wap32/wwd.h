@@ -9,8 +9,9 @@ typedef struct Wap32Wwd Wap32Wwd;
 typedef struct Wap32WwdPlane Wap32WwdPlane;
 typedef struct Wap32WwdObject Wap32WwdObject;
 
-WAP32_API int wap32_wwd_open(Wap32Wwd **out, const char *file_path);
+WAP32_API Wap32Wwd *wap32_wwd_create();
 WAP32_API void wap32_wwd_free(Wap32Wwd *wwd);
+WAP32_API int wap32_wwd_open(Wap32Wwd **out, const char *file_path);
 
 WAP32_API unsigned wap32_wwd_get_flags(Wap32Wwd *wwd);
 WAP32_API const char *wap32_wwd_get_level_name(Wap32Wwd *wwd);
@@ -46,7 +47,7 @@ WAP32_API void wap32_wwd_plane_get_dimensions(Wap32WwdPlane *plane, size_t *tile
 WAP32_API void wap32_wwd_plane_get_movement_percent(Wap32WwdPlane *plane, int *movement_x_percent, int *movement_y_percent);
 WAP32_API unsigned wap32_wwd_plane_get_fill_color(Wap32WwdPlane *plane);
 WAP32_API unsigned wap32_wwd_plane_get_z_coord(Wap32WwdPlane *plane);
-WAP32_API unsigned wap32_wwd_plane_get_image_sets_count(Wap32WwdPlane *plane);
+WAP32_API size_t wap32_wwd_plane_get_image_sets_count(Wap32WwdPlane *plane);
 WAP32_API const char *wap32_wwd_plane_get_image_set(Wap32WwdPlane *plane, unsigned image_set_index);
 
 WAP32_API void wap32_wwd_plane_set_flags(Wap32WwdPlane *plane, unsigned flags);
