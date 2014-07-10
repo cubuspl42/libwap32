@@ -1,4 +1,4 @@
-#include "wwd_read.h"
+#include "wwd.h"
 #include "io.h"
 #include <vector>
 
@@ -6,23 +6,42 @@ enum {
 	WWD_SIGNATURE = 0x05F4
 };
 
-void wap32_wwd__read(Wap32Wwd *wwd, const std::vector<char> &input_buffer)
-{
-    InputStream stream(input_buffer.data(), input_buffer.size());
-    
-    unsigned signature = 0;
-    stream.read(signature);
-    if(signature != WWD_SIGNATURE) {
-        wap32_err__throw(WAP32_EINVALIDDATA, "Input buffer does not contain WWD data");
-    }
-    
-    auto &d = wwd->data;
+struct WwdIoData {
     unsigned num_planes, planes_offset, tile_properties_offset, main_block_length, checksum;
-    stream.read(0, d.flags, 0,
-                d.level_name, d.author, d.birth, d.rez_file, d.image_dir, d.pal_rez,
-                d.start_x, d.start_y, 0,
-                num_planes, planes_offset, tile_properties_offset, main_block_length, checksum, 0,
-                d.launch_app,
-                d.image_sets[0], d.image_sets[1], d.image_sets[2], d.image_sets[3],
-                d.prefixes[0], d.prefixes[1], d.prefixes[2], d.prefixes[3]);
+};
+
+static void read_header(InputStream &stream, Wap32Wwd &wwd, WwdIoData &data)
+{
+    stream.read(0, wwd.flags, 0,
+                wwd.level_name, wwd.author, wwd.birth, wwd.rez_file,
+                wwd.image_dir, wwd.pal_rez, wwd.start_x, wwd.start_y, 0,
+                data.num_planes, data.planes_offset, data.tile_properties_offset,
+                data.main_block_length, data.checksum, 0, wwd.launch_app,
+                wwd.image_sets[0], wwd.image_sets[1], wwd.image_sets[2],
+                wwd.image_sets[3], wwd.prefixes[0], wwd.prefixes[1],
+                wwd.prefixes[2], wwd.prefixes[3]);
+}
+
+int wap32_wwd__read(Wap32Wwd *wwd, const std::vector<char> &input_buffer)
+{
+    Wap32ErrorContext errctx("reading wwd buffer");
+    InputStream stream(input_buffer);
+    
+    try {
+        unsigned signature = 0;
+        stream.read(signature);
+        if(signature != WWD_SIGNATURE) {
+            wap32_err__critical("input buffer does not have WWD signature");
+            return WAP32_EINVALIDDATA;
+        }
+        
+        WwdIoData data;
+        read_header(stream, *wwd, data);
+        wap32_wwd_set_planes_count(wwd, data.num_planes);
+        
+    } catch (InputStream::EndOfBuffer&) {
+        wap32_err__critical("unexpected end of input buffer");
+        return WAP32_EINVALIDDATA;
+    }
+    return 0;
 }
