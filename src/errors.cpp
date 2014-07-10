@@ -1,25 +1,25 @@
 #include "errors.h"
+#include <cassert>
 #include <iostream>
 
-static const char *s_wap32_err_description;
+std::vector<std::array<char, 128>> Wap32ErrorContext::error_context_stack;
+//char s_error_context_description[2048];
+//char *s_error_description;
 
-const char *wap32_err_description()
+Wap32ErrorContext::~Wap32ErrorContext()
 {
-    return s_wap32_err_description;
+    error_context_stack.pop_back();
 }
 
-void wap32_err__set_description(const char *description)
+void wap32_err__print_full_context(const char *message)
 {
-    s_wap32_err_description = description;
-}
-
-void wap32_err__throw(int error_code, const char *description)
-{
-    wap32_err__set_description(description);
-    throw Wap32Exception(error_code);
-}
-
-void wap32_err__warning(const char *description)
-{
-    std::cerr << description << std::endl;
+    auto &stack = Wap32ErrorContext::error_context_stack;
+    size_t n = stack.size();
+    for(size_t i = 0; i <= n; ++i) {
+        for(int j=0; j<i; ++j)
+            std::cerr << "    ";
+        if(i < n)
+            std::cerr << "when " << stack[i].data() << std::endl;
+        else std::cerr << message << std::endl;
+    }
 }

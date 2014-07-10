@@ -3,5 +3,6 @@
 
 #include "wap32/common.h"
 #include "errors.h"
+#include <assert.h>
 
 #endif
