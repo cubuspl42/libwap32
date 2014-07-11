@@ -1,4 +1,6 @@
 #include <wap32.h>
+#include "../src/wwd.h"
+
 #include <iostream>
 #include <memory>
 #include <unistd.h>
@@ -19,11 +21,7 @@ int main(int argc, const char **argv)
     unique_wwd_pointer wwd_ptr(wwd, wap32_wwd_free);
     
     if(error < 0) {
-        cerr << "Error opening WWD file";
-        const char *desc = wap32_err_description();
-        if(desc)
-            cerr << ": " << desc;
-        cerr << endl;
+        cerr << "Error opening WWD file" << endl;
         return 2;
     }
     cout << wap32_wwd_get_author(wwd) << endl;
