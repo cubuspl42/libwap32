@@ -8,7 +8,11 @@
 #include <iostream>
 #include <vector>
 
+#ifdef _WIN32
+#define BREAKPOINT DebugBreak();
+#else
 #define BREAKPOINT __asm__("int $3")
+#endif
 
 struct Wap32ErrorContext
 {
