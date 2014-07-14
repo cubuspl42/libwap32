@@ -31,7 +31,7 @@
 
 WAP32_BEGIN_DECLS
 
-struct wap32_Rect {
+struct Wap32Rect {
 	unsigned left;
 	unsigned top;
 	unsigned right;

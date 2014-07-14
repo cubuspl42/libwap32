@@ -8,6 +8,8 @@
 #include <iostream>
 #include <vector>
 
+#define BREAKPOINT __asm__("int $3")
+
 struct Wap32ErrorContext
 {
     static std::vector<std::array<char, 128>> error_context_stack;
@@ -30,6 +32,7 @@ void wap32_err__critical(const char *format, Args... args)
     char msg[128];
     wap32_util_buffer_printf(msg, format, args...);
     wap32_err__print_full_context(msg);
+    BREAKPOINT;
 }
 
 #endif

@@ -25,12 +25,13 @@ int wap32_wwd_open(Wap32Wwd **out, const char *file_path)
         Wap32ErrorContext errctx("opening file '%s'", file_path);
         *out = nullptr;
         
+        std::unique_ptr<Wap32Wwd, void(*)(Wap32Wwd*)> wwd {wap32_wwd_create(), wap32_wwd_free};
+
         std::ifstream file(file_path, std::ios::binary);
-        if(!file.good())
-            return WAP32_EFILE;
         std::vector<char> wwd_buffer((std::istreambuf_iterator<char>(file)),
                                      std::istreambuf_iterator<char>());
-        std::unique_ptr<Wap32Wwd, void(*)(Wap32Wwd*)> wwd {wap32_wwd_create(), wap32_wwd_free};
+        if(!file.good())
+            return WAP32_EFILE;
         
         int error = wap32_wwd__read(wwd.get(), wwd_buffer);
         if(error < 0)
