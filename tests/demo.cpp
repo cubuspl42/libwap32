@@ -35,7 +35,7 @@ int main(int argc, const char **argv)
         
         Wap32Wwd *wwd = nullptr;
         int error = wap32_wwd_open(&wwd, filename);
-        unique_wwd_pointer wwd_ptr(wwd, wap32_wwd_free);
+        unique_wwd_pointer wwd_ptr(wwd, wap32_wwd_free);        
         
         if(error < 0) {
             cerr << "Error opening WWD file" << endl;

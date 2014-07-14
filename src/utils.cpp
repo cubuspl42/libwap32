@@ -27,7 +27,7 @@ int wap32_util_inflate(char *out_buffer, size_t out_buffer_size,
     ret = inflate(&strm, Z_FINISH);
     (void)inflateEnd(&strm);
 
-    return ret == Z_STREAM_END ? 0 : WAP32_ERROR;
+    return ret == Z_STREAM_END ? WAP32_OK : WAP32_ERROR;
 }
 
 unsigned wap32_util_checksum(const char *buffer, size_t buffer_size)

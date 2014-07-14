@@ -179,7 +179,7 @@ size_t wap32_wwd_plane_get_image_sets_count(Wap32WwdPlane *plane)
 
 const char *wap32_wwd_plane_get_image_set(Wap32WwdPlane *plane, unsigned image_set_index)
 {
-	return plane->image_sets[image_set_index].data();
+	return plane->image_sets[image_set_index].c_str();
 }
 
 // Wap32WwdPlane setters
@@ -229,8 +229,7 @@ void wap32_wwd_plane_set_image_sets_count(Wap32WwdPlane *plane, unsigned count)
 
 void wap32_wwd_plane_set_image_set(Wap32WwdPlane *plane, unsigned image_set_index, const char *image_set)
 {
-    auto &arr = plane->image_sets[image_set_index];
-	wap32_util_buffer_assign(arr.data(), arr.size(), image_set);
+    plane->image_sets[image_set_index] = image_set;
 }
 
 unsigned wap32_wwd_plane_get_object_count(Wap32WwdPlane *plane)

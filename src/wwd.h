@@ -4,10 +4,8 @@
 #include "wap32/wwd.h"
 #include "common.h"
 #include <array>
+#include <string>
 #include <vector>
-
-template<size_t size>
-using WapBuffer = std::array<char, size>;
 
 struct Wap32WwdObject {
     int id;
@@ -51,10 +49,10 @@ struct Wap32WwdObject {
     unsigned hit_type_flags;
     int x_move_res;
     int y_move_res;
-	char name[128];
-	char logic[128];
-	char image_set[128];
-    char animation[128];
+    std::string name;
+    std::string logic;
+    std::string image_set;
+    std::string animation;
 
 };
 
@@ -70,12 +68,12 @@ struct Wap32WwdPlane {
     unsigned fill_color;
     int z_coord;
     std::vector<unsigned> tiles;
-	std::vector<std::array<char, 128>> image_sets;
+	std::vector<std::string> image_sets;
     std::vector<Wap32WwdObject> objects;
 };
 
 struct Wap32WwdTileDescription {
-    unsigned kind;
+    unsigned type;
     unsigned width;
     unsigned height;
     unsigned inside_attrib;
