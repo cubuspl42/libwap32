@@ -33,25 +33,26 @@ static void read_nullterminated_string(InputStream &stream, std::string &str)
     }
 }
 
-static void read_objects(InputStream &stream, std::vector<Wap32WwdObject> &objects)
+static void read_objects(InputStream &stream, std::vector<Wap32Object> &objects)
 {
-    for(Wap32WwdObject &obj : objects) {
+    for(Wap32Object &obj : objects) {
+        auto &objp = obj.properties;
         unsigned name_len, logic_len, image_set_len, animation_len;
-        stream.read(obj.id, name_len, logic_len, image_set_len, animation_len, obj.x, obj.y, obj.z, obj.i, obj.add_flags,
-                    obj.dynamic_flags, obj.draw_flags, obj.user_flags, obj.score, obj.points, obj.powerup, obj.damage,
-                    obj.smarts, obj.health);
+        stream.read(objp.id, name_len, logic_len, image_set_len, animation_len, objp.x, objp.y, objp.z, objp.i, objp.add_flags,
+                    objp.dynamic_flags, objp.draw_flags, objp.user_flags, objp.score, objp.points, objp.powerup, objp.damage,
+                    objp.smarts, objp.health);
         
-        read_rect(stream, obj.move_rect);
-        read_rect(stream, obj.hit_rect);
-        read_rect(stream, obj.attack_rect);
-        read_rect(stream, obj.clip_rect);
-        read_rect(stream, obj.user_rects[0]);
-        read_rect(stream, obj.user_rects[1]);
+        read_rect(stream, objp.move_rect);
+        read_rect(stream, objp.hit_rect);
+        read_rect(stream, objp.attack_rect);
+        read_rect(stream, objp.clip_rect);
+        read_rect(stream, objp.user_rects[0]);
+        read_rect(stream, objp.user_rects[1]);
         
-        stream.read(obj.user_values);
-        stream.read(obj.x_min, obj.y_min, obj.x_max, obj.y_max, obj.speed_x, obj.speed_y, obj.x_tweak, obj.y_tweak, obj.counter,
-                    obj.speed, obj.width, obj.health, obj.direction, obj.face_dir, obj.time_delay, obj.frame_delay,
-                    obj.object_type, obj.hit_type_flags, obj.x_move_res, obj.y_move_res);
+        stream.read(objp.user_values);
+        stream.read(objp.x_min, objp.y_min, objp.x_max, objp.y_max, objp.speed_x, objp.speed_y, objp.x_tweak, objp.y_tweak, objp.counter,
+                    objp.speed, objp.width, objp.health, objp.direction, objp.face_dir, objp.time_delay, objp.frame_delay,
+                    objp.object_type, objp.hit_type_flags, objp.x_move_res, objp.y_move_res);
         
         read_string(stream, obj.name, name_len);
         read_string(stream, obj.logic, logic_len);
@@ -60,19 +61,20 @@ static void read_objects(InputStream &stream, std::vector<Wap32WwdObject> &objec
     }
 }
 
-static void read_planes(InputStream &stream, Wap32Wwd *wwd)
+static void read_planes(InputStream &stream, std::vector<Wap32Plane> &planes)
 {
-    for(Wap32WwdPlane &plane : wwd->planes) {
+    for(Wap32Plane &plane : planes) {
+        auto &planep = plane.properties;
         unsigned height_px, width_px; // TODO: These values are not actually checked
         unsigned num_image_sets, num_objects;
         unsigned tiles_offset, image_sets_offset, objects_offset;
         
-        stream.read(160, 0, plane.flags, 0, plane.name, height_px, width_px, plane.tile_width, plane.tile_height,
-                    plane.tiles_wide, plane.tiles_high, 0, 0, plane.movement_x_percent, plane.movement_y_percent,
-                    plane.fill_color, num_image_sets, num_objects, tiles_offset, image_sets_offset, objects_offset,
-                    plane.z_coord, 0, 0, 0);
+        stream.read(160, 0, planep.flags, 0, planep.name, height_px, width_px, planep.tile_width, planep.tile_height,
+                    planep.tiles_wide, planep.tiles_high, 0, 0, planep.movement_x_percent, planep.movement_y_percent,
+                    planep.fill_color, num_image_sets, num_objects, tiles_offset, image_sets_offset, objects_offset,
+                    planep.z_coord, 0, 0, 0);
         
-        plane.tiles.resize(plane.tiles_wide * plane.tiles_high);
+        plane.tiles.resize(planep.tiles_wide * planep.tiles_high);
         plane.image_sets.resize(num_image_sets);
         plane.objects.resize(num_objects);
 
@@ -91,15 +93,15 @@ static void read_planes(InputStream &stream, Wap32Wwd *wwd)
     }
 }
 
-static void read_tiles_descriptions(InputStream &stream, Wap32Wwd *wwd)
+static void read_tile_descriptions(InputStream &stream, std::vector<Wap32TileDescription> &tile_descriptions)
 {
-    unsigned num_tiles_descriptions;
-    stream.read(32, 0, num_tiles_descriptions, 0, 0, 0, 0, 0);
+    unsigned num_tile_descriptions;
+    stream.read(32, 0, num_tile_descriptions, 0, 0, 0, 0, 0);
     
-    wwd->tile_descriptions.resize(num_tiles_descriptions);
+    tile_descriptions.resize(num_tile_descriptions);
     
     int i = 0;
-    for(Wap32WwdTileDescription &desc : wwd->tile_descriptions) {
+    for(Wap32TileDescription &desc : tile_descriptions) {
         stream.read(desc.type, 0, desc.width, desc.height);
         if(desc.type == WAP32_WWD_TILE_TYPE_SINGLE) {
             stream.read(desc.inside_attrib);
@@ -111,23 +113,24 @@ static void read_tiles_descriptions(InputStream &stream, Wap32Wwd *wwd)
     }
 }
 
-static void read_main_block(InputStream &stream, Wap32Wwd *wwd, unsigned planes_offset,
-                            unsigned tiles_descriptions_offset)
+static void read_main_block(InputStream &stream, unsigned planes_offset, std::vector<Wap32Plane> &planes,
+                            unsigned tiles_descriptions_offset, std::vector<Wap32TileDescription> &tile_descriptions)
 {
     stream.seek(planes_offset);
-    read_planes(stream, wwd);
+    read_planes(stream, planes);
     
     stream.seek(tiles_descriptions_offset);
-    read_tiles_descriptions(stream, wwd);
+    read_tile_descriptions(stream, tile_descriptions);
 }
 
 
-int wap32_wwd__read(Wap32Wwd *wwd, const std::vector<char> &input_buffer)
+int wap32_wwd__read(Wap32Wwd &wwd, const std::vector<char> &input_buffer)
 {
     try {
         Wap32ErrorContext errctx("reading wwd buffer");
-        
         InputStream stream(input_buffer.data(), input_buffer.size());
+    
+        auto &wwdp = wwd.properties;
         unsigned signature;
         stream.read(signature);
         
@@ -137,16 +140,16 @@ int wap32_wwd__read(Wap32Wwd *wwd, const std::vector<char> &input_buffer)
         }
         
         unsigned num_planes, planes_offset, tiles_descriptions_offset, decompressed_main_block_size, their_checksum;
-        stream.read(0, wwd->flags, 0, wwd->level_name, wwd->author, wwd->birth, wwd->rez_file, wwd->image_dir, wwd->pal_rez,
-                    wwd->start_x, wwd->start_y, 0, num_planes, planes_offset, tiles_descriptions_offset,
-                    decompressed_main_block_size, their_checksum, 0, wwd->launch_app, wwd->image_sets[0], wwd->image_sets[1],
-                    wwd->image_sets[2], wwd->image_sets[3], wwd->prefixes[0], wwd->prefixes[1], wwd->prefixes[2],
-                    wwd->prefixes[3]);
+        stream.read(0, wwdp.flags, 0, wwdp.level_name, wwdp.author, wwdp.birth, wwdp.rez_file, wwdp.image_dir, wwdp.pal_rez,
+                    wwdp.start_x, wwdp.start_y, 0, num_planes, planes_offset, tiles_descriptions_offset,
+                    decompressed_main_block_size, their_checksum, 0, wwdp.launch_app, wwdp.image_sets[0], wwdp.image_sets[1],
+                    wwdp.image_sets[2], wwdp.image_sets[3], wwdp.prefixes[0], wwdp.prefixes[1], wwdp.prefixes[2],
+                    wwdp.prefixes[3]);
         
         assert(stream.tell() == WWD_HEADER_SIZE);
-        wwd->planes.resize(num_planes);
+        wwd.planes.resize(num_planes);
                 
-        if(wwd->flags & WAP32_WWD_COMPRESS) {
+        if(wwdp.flags & WAP32_WWD_FLAG_COMPRESS) {
             std::vector<char> decompressed_buffer(WWD_HEADER_SIZE + decompressed_main_block_size);
             memcpy(&decompressed_buffer[0], &input_buffer[0], WWD_HEADER_SIZE);
             const char *main_block = &input_buffer[WWD_HEADER_SIZE];
@@ -156,9 +159,9 @@ int wap32_wwd__read(Wap32Wwd *wwd, const std::vector<char> &input_buffer)
             if(error < 0)
                 return WAP32_EINVALIDDATA;
             InputStream stream_decompressed(&decompressed_buffer[0], decompressed_buffer.size(), stream.tell());
-            read_main_block(stream_decompressed, wwd, planes_offset, tiles_descriptions_offset);
+            read_main_block(stream_decompressed, planes_offset, wwd.planes, tiles_descriptions_offset, wwd.tile_descriptions);
         } else {
-            read_main_block(stream, wwd, planes_offset, tiles_descriptions_offset);
+            read_main_block(stream, planes_offset, wwd.planes, tiles_descriptions_offset, wwd.tile_descriptions);
         }
     } catch (InputStream::EndOfBuffer&) {
         return WAP32_EINVALIDDATA;
