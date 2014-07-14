@@ -6,8 +6,8 @@
 WAP32_BEGIN_DECLS
 
 typedef enum {
-    WAP32_WWD_FLAG_USE_Z_COORDS = 0x1,
-    WAP32_WWD_FLAG_COMPRESS = 0x2
+    WAP32_WWD_FLAG_USE_Z_COORDS = 1 << 0,
+    WAP32_WWD_FLAG_COMPRESS     = 1 << 1,
 } Wap32WwdFlags;
 
 typedef enum {
@@ -88,7 +88,14 @@ typedef struct Wap32Wwd Wap32Wwd;
 typedef struct Wap32Plane Wap32Plane;
 typedef struct Wap32Object Wap32Object;
 
-struct Wap32WwdProperties {
+typedef struct {
+	unsigned left;
+	unsigned top;
+	unsigned right;
+	unsigned bottom;
+} Wap32Rect;
+
+typedef struct {
     unsigned flags;
     char level_name[64];
     char author[64];
@@ -101,9 +108,9 @@ struct Wap32WwdProperties {
     char launch_app[128];
     char image_sets[4][128];
     char prefixes[4][32];
-};
+} Wap32WwdProperties;
 
-struct Wap32PlaneProperties {
+typedef struct {
     unsigned flags;
     char name[64];
     unsigned tile_width;
@@ -114,9 +121,9 @@ struct Wap32PlaneProperties {
     int movement_y_percent;
     unsigned fill_color;
     int z_coord;
-};
+} Wap32PlaneProperties;
 
-struct Wap32ObjectProperties {
+typedef struct {
     int id;
     int x;
     int y;
@@ -158,16 +165,16 @@ struct Wap32ObjectProperties {
     unsigned hit_type_flags;
     int x_move_res;
     int y_move_res;
-};
+} Wap32ObjectProperties;
 
-struct Wap32TileDescription {
+typedef struct {
     unsigned type;
     unsigned width;
     unsigned height;
     unsigned inside_attrib;
     unsigned outside_attrib;
     Wap32Rect rect;
-};
+} Wap32TileDescription;
 
 WAP32_API Wap32Wwd *wap32_wwd_create();
 

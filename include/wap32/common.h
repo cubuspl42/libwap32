@@ -29,15 +29,4 @@
 #  define WAP32_END_DECLS
 #endif
 
-WAP32_BEGIN_DECLS
-
-struct Wap32Rect {
-	unsigned left;
-	unsigned top;
-	unsigned right;
-	unsigned bottom;
-};
-
-WAP32_END_DECLS
-
 #endif
