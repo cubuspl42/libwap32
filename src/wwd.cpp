@@ -34,12 +34,12 @@ int wap32_wwd_open(Wap32Wwd **out, const char *file_path)
     }
 }
 
-size_t wap32_wwd_get_planes_count(const Wap32Wwd *wwd)
+size_t wap32_wwd_get_plane_count(const Wap32Wwd *wwd)
 {
 	return wwd->planes.size();
 }
 
-void wap32_wwd_set_planes_count(Wap32Wwd *wwd, size_t count)
+void wap32_wwd_set_plane_count(Wap32Wwd *wwd, size_t count)
 {
 	wwd->planes.resize(count);
 }
@@ -49,17 +49,42 @@ Wap32Plane *wap32_wwd_get_plane(Wap32Wwd *wwd, size_t plane_index)
 	return &wwd->planes[plane_index];
 }
 
+size_t wap32_wwd_get_tile_description_count(Wap32Wwd *wwd)
+{
+    return wwd->tile_descriptions.size();
+}
+
+Wap32TileDescription *wap32_wwd_get_tile_description(Wap32Wwd *wwd, size_t description_index)
+{
+    return &wwd->tile_descriptions[description_index];
+}
+
 Wap32WwdProperties *wap32_wwd_get_properties(Wap32Wwd *wwd)
 {
     return &wwd->properties;
 }
 
-size_t wap32_plane_get_image_sets_count(const Wap32Plane *plane)
+size_t wap32_plane_get_tile_count(const Wap32Plane *plane)
+{
+    return plane->tiles.size();
+}
+
+void wap32_plane_set_tile_count(Wap32Plane *plane, size_t count)
+{
+    plane->tiles.resize(count);
+}
+
+unsigned wap32_plane_get_tile(const Wap32Plane *plane, size_t tile_index)
+{
+    return plane->tiles[tile_index];
+}
+
+size_t wap32_plane_get_image_set_count(const Wap32Plane *plane)
 {
 	return plane->image_sets.size();
 }
 
-void wap32_plane_set_image_sets_count(Wap32Plane *plane, size_t count)
+void wap32_plane_set_image_set_count(Wap32Plane *plane, size_t count)
 {
 	plane->image_sets.resize(count);
 }

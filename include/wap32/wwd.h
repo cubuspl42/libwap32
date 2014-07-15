@@ -182,17 +182,27 @@ WAP32_API void wap32_wwd_free(Wap32Wwd *wwd);
 
 WAP32_API int wap32_wwd_open(Wap32Wwd **out, const char *file_path);
 
-WAP32_API size_t wap32_wwd_get_planes_count(const Wap32Wwd *wwd);
+WAP32_API size_t wap32_wwd_get_plane_count(const Wap32Wwd *wwd);
 
-WAP32_API void wap32_wwd_set_planes_count(Wap32Wwd *wwd, size_t count);
+WAP32_API void wap32_wwd_set_plane_count(Wap32Wwd *wwd, size_t count);
 
 WAP32_API Wap32Plane *wap32_wwd_get_plane(Wap32Wwd *wwd, size_t plane_index);
 
+WAP32_API size_t wap32_wwd_get_tile_description_count(Wap32Wwd *wwd);
+
+WAP32_API Wap32TileDescription *wap32_wwd_get_tile_description(Wap32Wwd *wwd, size_t description_index);
+
 WAP32_API Wap32WwdProperties *wap32_wwd_get_properties(Wap32Wwd *wwd);
 
-WAP32_API size_t wap32_plane_get_image_sets_count(const Wap32Plane *plane);
+WAP32_API size_t wap32_plane_get_tile_count(const Wap32Plane *plane);
 
-WAP32_API void wap32_plane_set_image_sets_count(Wap32Plane *plane, size_t count);
+WAP32_API void wap32_plane_set_tile_count(Wap32Plane *plane, size_t count);
+
+WAP32_API unsigned wap32_plane_get_tile(const Wap32Plane *plane, size_t tile_index);
+
+WAP32_API size_t wap32_plane_get_image_set_count(const Wap32Plane *plane);
+
+WAP32_API void wap32_plane_set_image_set_count(Wap32Plane *plane, size_t count);
 
 WAP32_API const char *wap32_plane_get_image_set(const Wap32Plane *plane, size_t image_set_index);
 
@@ -206,23 +216,23 @@ WAP32_API Wap32Object *wap32_plane_get_object(Wap32Plane *plane, size_t object_i
 
 WAP32_API Wap32PlaneProperties *wap32_plane_get_properties(Wap32Plane *plane);
 
-WAP32_API const char *WAP32_OBJECT_get_name(const Wap32Object *object);
+WAP32_API const char *wap32_object_get_name(const Wap32Object *object);
 
-WAP32_API void WAP32_OBJECT_set_name(Wap32Object *object, const char *name);
+WAP32_API void wap32_object_set_name(Wap32Object *object, const char *name);
 
-WAP32_API const char *WAP32_OBJECT_get_logic(const Wap32Object *object);
+WAP32_API const char *wap32_object_get_logic(const Wap32Object *object);
 
-WAP32_API void WAP32_OBJECT_set_logic(Wap32Object *object, const char *logic);
+WAP32_API void wap32_object_set_logic(Wap32Object *object, const char *logic);
 
-WAP32_API const char *WAP32_OBJECT_get_image_set(const Wap32Object *object);
+WAP32_API const char *wap32_object_get_image_set(const Wap32Object *object);
 
-WAP32_API void WAP32_OBJECT_set_image_set(Wap32Object *object, const char *image_set);
+WAP32_API void wap32_object_set_image_set(Wap32Object *object, const char *image_set);
 
-WAP32_API const char *WAP32_OBJECT_get_animation(const Wap32Object *object);
+WAP32_API const char *wap32_object_get_animation(const Wap32Object *object);
 
-WAP32_API void WAP32_OBJECT_set_animation(Wap32Object *object, const char *animation);
+WAP32_API void wap32_object_set_animation(Wap32Object *object, const char *animation);
 
-Wap32ObjectProperties *WAP32_OBJECT_get_properties(Wap32Object *object);
+Wap32ObjectProperties *wap32_object_get_properties(Wap32Object *object);
 
 WAP32_END_DECLS
 
