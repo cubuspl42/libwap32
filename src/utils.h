@@ -6,14 +6,6 @@
 #include <cstdio>
 #include <vector>
 
-void wap32_util_buffer_assign(char *buffer, size_t size, const char *source);
-
-template<size_t size>
-void wap32_util_buffer_assign(char(&buffer)[size], const char *source)
-{
-	wap32_util_buffer_assign(buffer, size, source);
-}
-
 template<typename... Args>
 void wap32_util_buffer_printf(char *buffer, size_t buffer_size, const char *format, Args... args)
 {

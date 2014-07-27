@@ -3,12 +3,6 @@
 #include <iostream>
 #include <zlib.h>
 
-void wap32_util_buffer_assign(char *buffer, size_t size, const char *source)
-{
-	strncpy(buffer, source, size);
-	buffer[size - 1] = '\0';
-}
-
 int wap32_util_inflate(char *out_buffer, size_t out_buffer_size,
                        const char *in_buffer, size_t in_buffer_size)
 {
