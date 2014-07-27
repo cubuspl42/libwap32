@@ -7,27 +7,27 @@
 #include <string>
 #include <vector>
 
-struct Wap32Object {
-    Wap32ObjectProperties properties;
+struct wap_object {
+    wap_object_properties properties;
     std::string name;
     std::string logic;
     std::string image_set;
     std::string animation;
 };
 
-struct Wap32Plane {
-    Wap32PlaneProperties properties;
+struct wap_plane {
+    wap_plane_properties properties;
     std::vector<unsigned> tiles;
 	std::vector<std::string> image_sets;
-    std::vector<Wap32Object> objects;
+    std::vector<wap_object> objects;
 };
 
-struct Wap32Wwd {
-    Wap32WwdProperties properties;
-	std::vector<Wap32Plane> planes;
-    std::vector<Wap32TileDescription> tile_descriptions;
+struct wap_wwd {
+    wap_wwd_properties properties;
+	std::vector<wap_plane> planes;
+    std::vector<wap_tile_description> tile_descriptions;
 };
 
-int wap32_wwd__read(Wap32Wwd &wwd, const std::vector<char> &input_buffer);
+int wap_wwd__read(wap_wwd &wwd, const std::vector<char> &input_buffer);
 
 #endif

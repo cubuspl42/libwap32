@@ -37,7 +37,7 @@ private:
     template<typename T>
     void read_impl(T &val) {
         if(m_offset > m_buffer_size - sizeof(T)) {
-            wap32_err__critical("unexpected end of input buffer");
+            wap_err__critical("unexpected end of input buffer");
             throw EndOfBuffer();
         }
         memcpy(&val, m_buffer + m_offset, sizeof(T));
