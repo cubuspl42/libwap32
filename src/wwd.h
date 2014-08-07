@@ -28,6 +28,4 @@ struct wap_wwd {
     std::vector<wap_tile_description> tile_descriptions;
 };
 
-int wap_wwd__read(wap_wwd &wwd, const std::vector<char> &input_buffer);
-
 #endif

@@ -2,6 +2,7 @@
 #define wap_wwd_h
 
 #include "common.h"
+#include "buffer.h"
 
 WAP_BEGIN_DECLS
 
@@ -48,8 +49,8 @@ typedef enum {
 } wap_objectDrawFlags;
 
 typedef enum {
-    WAP_OBJECT_DYNAMIC_FLAG_NO_HIT                 = 1 << 0,
-    WAP_OBJECT_DYNAMIC_FLAG_ALWAYS_ACTIVE          = 1 << 1,
+    WAP_OBJECT_DYNAMIC_FLAG_NO_HIT            = 1 << 0,
+    WAP_OBJECT_DYNAMIC_FLAG_ALWAYS_ACTIVE     = 1 << 1,
     WAP_OBJECT_DYNAMIC_FLAG_SAFE              = 1 << 2,
     WAP_OBJECT_DYNAMIC_FLAG_AUTO_HIT_DAMAGE   = 1 << 3,
 } wap_objectDynamicFlags;
@@ -180,7 +181,13 @@ WAP_API wap_wwd *wap_wwd_create();
 
 WAP_API void wap_wwd_free(wap_wwd *wwd);
 
-WAP_API int wap_wwd_open(wap_wwd **out, const char *file_path);
+WAP_API int wap_wwd_read(wap_wwd *wwd, const char *wwd_buffer, size_t wwd_buffer_size);
+
+WAP_API int wap_wwd_open(wap_wwd *wwd, const char *file_path);
+
+WAP_API int wap_wwd_write(const wap_wwd *wwd, wap_buffer *out_wwd_buffer);
+
+WAP_API int wap_wwd_save(const wap_wwd *wwd, const char *file_path);
 
 WAP_API size_t wap_wwd_get_plane_count(const wap_wwd *wwd);
 
@@ -188,7 +195,7 @@ WAP_API void wap_wwd_set_plane_count(wap_wwd *wwd, size_t count);
 
 WAP_API wap_plane *wap_wwd_get_plane(wap_wwd *wwd, size_t plane_index);
 
-WAP_API size_t wap_wwd_get_tile_description_count(wap_wwd *wwd);
+WAP_API size_t wap_wwd_get_tile_description_count(const wap_wwd *wwd);
 
 WAP_API wap_tile_description *wap_wwd_get_tile_description(wap_wwd *wwd, size_t description_index);
 

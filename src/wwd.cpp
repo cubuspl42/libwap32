@@ -14,25 +14,6 @@ void wap_wwd_free(wap_wwd *wwd)
 	delete wwd;
 }
 
-int wap_wwd_open(wap_wwd **out, const char *file_path)
-{
-    try {
-        wap_error_context errctx("opening file '%s'", file_path);
-        *out = nullptr;
-        std::unique_ptr<wap_wwd> wwd { new wap_wwd };
-        std::ifstream file(file_path, std::ios::binary);
-        std::vector<char> wwd_buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        if(!file.good())
-            return WAP_EFILE;
-        int error = wap_wwd__read(*wwd.get(), wwd_buffer);
-        if(error < 0)
-            return error;
-        *out = wwd.release();
-        return WAP_OK;
-    } catch(std::bad_alloc&) {
-        return WAP_ENOMEMORY;
-    }
-}
 
 size_t wap_wwd_get_plane_count(const wap_wwd *wwd)
 {
@@ -49,7 +30,7 @@ wap_plane *wap_wwd_get_plane(wap_wwd *wwd, size_t plane_index)
 	return &wwd->planes[plane_index];
 }
 
-size_t wap_wwd_get_tile_description_count(wap_wwd *wwd)
+size_t wap_wwd_get_tile_description_count(const wap_wwd *wwd)
 {
     return wwd->tile_descriptions.size();
 }
@@ -96,7 +77,7 @@ const char *wap_plane_get_image_set(const wap_plane *plane, size_t image_set_ind
 
 void wap_plane_set_image_set(wap_plane *plane, size_t image_set_index, const char *image_set)
 {
-    plane->image_sets[image_set_index] = image_set;
+    plane->image_sets[image_set_index].assign(image_set);
 }
 
 size_t wap_plane_get_object_count(const wap_plane *plane)

@@ -29,6 +29,7 @@ struct wap_error_context
 };
 
 void wap_err__print_full_context(const char *message);
+
 template<typename... Args>
 void wap_err__critical(const char *format, Args... args)
 {
