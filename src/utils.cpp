@@ -45,7 +45,7 @@ int wap_util_deflate(std::vector<char> &out_buffer, const char *in_buffer, size_
     out_buffer.resize(0);
     
     do {
-        constexpr size_t step = 32 * 1024; // 32 kB
+        constexpr size_t step = 64 * 1024;
         out_buffer.resize(out_buffer.size() + step);
         strm.avail_out = out_buffer.capacity() - strm.total_out;
         strm.next_out = (unsigned char*)out_buffer.data() + strm.total_out;

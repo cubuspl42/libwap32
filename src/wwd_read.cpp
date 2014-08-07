@@ -1,16 +1,15 @@
 #include "common.h"
-#include "errors.h"
 #include "wwd.h"
+
+#include "buffer.h"
+#include "errors.h"
 #include "io.h"
-#include "wap32/buffer.h"
+#include "wwd_io.h"
+
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
 #include <vector>
-
-enum {
-	WWD_HEADER_SIZE = 1524,
-};
 
 static void read_rect(InputStream &stream, wap_rect &rect)
 {
@@ -66,33 +65,52 @@ static void read_objects(InputStream &stream, std::vector<wap_object> &objects)
 
 static void read_planes(InputStream &stream, std::vector<wap_plane> &planes)
 {
+    std::vector<wwd_plane_offsets> planes_offsets(planes.size());
+    
+    auto plane_offsets = planes_offsets.begin();
     for(wap_plane &plane : planes) {
         auto &planep = plane.properties;
         unsigned height_px, width_px; // TODO: These values are not actually checked
         unsigned num_image_sets, num_objects;
-        unsigned tiles_offset, image_sets_offset, objects_offset;
         
         stream.read(160, 0, planep.flags, 0, planep.name, width_px, height_px, planep.tile_width, planep.tile_height,
                     planep.tiles_wide, planep.tiles_high, 0, 0, planep.movement_x_percent, planep.movement_y_percent,
-                    planep.fill_color, num_image_sets, num_objects, tiles_offset, image_sets_offset, objects_offset,
-                    planep.z_coord, 0, 0, 0);
+                    planep.fill_color, num_image_sets, num_objects, plane_offsets->tiles_offset,
+                    plane_offsets->image_sets_offset, plane_offsets->objects_offset, planep.z_coord, 0, 0, 0);
         
         plane.tiles.resize(planep.tiles_wide * planep.tiles_high);
         plane.image_sets.resize(num_image_sets);
         plane.objects.resize(num_objects);
-
-        InputStream substream(stream);
-        
-        substream.seek(tiles_offset);
-        for(unsigned &tile : plane.tiles)
-            substream.read(tile);
-        
-        substream.seek(image_sets_offset);
-        for(auto &image_set : plane.image_sets)
-            read_nullterminated_string(substream, image_set);
-        
-        substream.seek(objects_offset);
-        read_objects(substream, plane.objects);
+        ++plane_offsets;
+    }
+    
+    plane_offsets = planes_offsets.begin();
+    for(wap_plane &plane : planes) {
+        if(!plane.tiles.empty()) {
+            stream.seek(plane_offsets->tiles_offset);
+            for(unsigned &tile : plane.tiles)
+                stream.read(tile);
+        }
+        ++plane_offsets;
+    }
+    
+    plane_offsets = planes_offsets.begin();
+    for(wap_plane &plane : planes) {
+        if(!plane.image_sets.empty()) {
+            stream.seek(plane_offsets->image_sets_offset);
+            for(std::string &image_set : plane.image_sets)
+                read_nullterminated_string(stream, image_set);
+        }
+        ++plane_offsets;
+    }
+    
+    plane_offsets = planes_offsets.begin();
+    for(wap_plane &plane : planes) {
+        if(!plane.objects.empty()) {
+            stream.seek(plane_offsets->objects_offset);
+            read_objects(stream, plane.objects);
+        }
+        ++plane_offsets;
     }
 }
 
@@ -114,55 +132,63 @@ static void read_tile_descriptions(InputStream &stream, std::vector<wap_tile_des
     }
 }
 
-static void read_main_block(InputStream &stream, unsigned planes_offset, std::vector<wap_plane> &planes,
-                            unsigned tiles_descriptions_offset, std::vector<wap_tile_description> &tile_descriptions)
+static void read_main_block(InputStream &stream, std::vector<wap_plane> &planes,
+                            std::vector<wap_tile_description> &tile_descriptions, const wwd_offsets &offsets)
 {
-    stream.seek(planes_offset);
+    stream.seek(offsets.main_block_offset);
     read_planes(stream, planes);
     
-    stream.seek(tiles_descriptions_offset);
+    stream.seek(offsets.tile_descriptions_offset);
     read_tile_descriptions(stream, tile_descriptions);
 }
 
+static void read_header(InputStream &stream, wap_wwd &wwd, wwd_offsets &offsets, unsigned &decompressed_main_block_size)
+{
+    unsigned signature;
+    stream.read(signature);
+    
+    if(signature != WAP_WWD_HEADER_SIZE) {
+        wap_err__critical("input buffer does not have WWD signature");
+        //return WAP_EINVALIDDATA;
+    }
+    
+    wap_wwd_properties &wwdp = wwd.properties;
+    unsigned num_planes;
+    unsigned checksum; // Not checked
+    
+    stream.read(0, wwdp.flags, 0, wwdp.level_name, wwdp.author, wwdp.birth, wwdp.rez_file, wwdp.image_dir, wwdp.pal_rez,
+                 wwdp.start_x, wwdp.start_y, 0, num_planes, offsets.main_block_offset, offsets.tile_descriptions_offset,
+                 decompressed_main_block_size, checksum, 0, wwdp.launch_app, wwdp.image_sets[0], wwdp.image_sets[1],
+                 wwdp.image_sets[2], wwdp.image_sets[3], wwdp.prefixes[0], wwdp.prefixes[1], wwdp.prefixes[2],
+                 wwdp.prefixes[3]);
+    
+    wwd.planes.resize(num_planes);
+}
 
 int wap_wwd_read(wap_wwd *wwd, const char *wwd_buffer, size_t wwd_buffer_size)
 {
     try {
         wap_error_context errctx("reading wwd buffer");
         InputStream stream(wwd_buffer, wwd_buffer_size);
-
-        auto &wwdp = wwd->properties;
-        unsigned signature;
-        stream.read(signature);
         
-        if(signature != WWD_HEADER_SIZE) {
-            wap_err__critical("input buffer does not have WWD signature");
-            return WAP_EINVALIDDATA;
-        }
+        wap_wwd_properties &wwdp = wwd->properties;
+        wwd_offsets offsets;
+        unsigned decompressed_main_block_size;
+        read_header(stream, *wwd, offsets, decompressed_main_block_size);
         
-        unsigned num_planes, planes_offset, tiles_descriptions_offset, decompressed_main_block_size, their_checksum;
-        stream.read(0, wwdp.flags, 0, wwdp.level_name, wwdp.author, wwdp.birth, wwdp.rez_file, wwdp.image_dir, wwdp.pal_rez,
-                    wwdp.start_x, wwdp.start_y, 0, num_planes, planes_offset, tiles_descriptions_offset,
-                    decompressed_main_block_size, their_checksum, 0, wwdp.launch_app, wwdp.image_sets[0], wwdp.image_sets[1],
-                    wwdp.image_sets[2], wwdp.image_sets[3], wwdp.prefixes[0], wwdp.prefixes[1], wwdp.prefixes[2],
-                    wwdp.prefixes[3]);
-        
-        assert(stream.tell() == WWD_HEADER_SIZE);
-        wwd->planes.resize(num_planes);
-                
         if(wwdp.flags & WAP_WWD_FLAG_COMPRESS) {
-            std::vector<char> decompressed_buffer(WWD_HEADER_SIZE + decompressed_main_block_size);
-            memcpy(&decompressed_buffer[0], wwd_buffer, WWD_HEADER_SIZE);
-            const char *main_block = wwd_buffer + WWD_HEADER_SIZE;
-            const size_t main_block_size = wwd_buffer_size - WWD_HEADER_SIZE;
-            char *decompressed_main_block = &decompressed_buffer[WWD_HEADER_SIZE];
+            std::vector<char> decompressed_buffer(WAP_WWD_HEADER_SIZE + decompressed_main_block_size);
+            memcpy(&decompressed_buffer[0], wwd_buffer, WAP_WWD_HEADER_SIZE);
+            const char *main_block = wwd_buffer + WAP_WWD_HEADER_SIZE;
+            const size_t main_block_size = wwd_buffer_size - WAP_WWD_HEADER_SIZE;
+            char *decompressed_main_block = &decompressed_buffer[WAP_WWD_HEADER_SIZE];
             int error = wap_util_inflate(decompressed_main_block, decompressed_main_block_size, main_block, main_block_size);
             if(error < 0)
                 return WAP_EINVALIDDATA;
             InputStream stream_decompressed(&decompressed_buffer[0], decompressed_buffer.size(), stream.tell());
-            read_main_block(stream_decompressed, planes_offset, wwd->planes, tiles_descriptions_offset, wwd->tile_descriptions);
+            read_main_block(stream_decompressed, wwd->planes, wwd->tile_descriptions, offsets);
         } else {
-            read_main_block(stream, planes_offset, wwd->planes, tiles_descriptions_offset, wwd->tile_descriptions);
+            read_main_block(stream, wwd->planes, wwd->tile_descriptions, offsets);
         }
     } catch (InputStream::EndOfBuffer&) {
         return WAP_EINVALIDDATA;
@@ -177,11 +203,8 @@ int wap_wwd_open(wap_wwd *wwd, const char *file_path)
         std::ifstream file(file_path, std::ios::binary);
         std::vector<char> wwd_buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
         if(!file.good())
-        return WAP_EFILE;
-        int error = wap_wwd_read(wwd, wwd_buffer.data(), wwd_buffer.size());
-        if(error < 0)
-        return error;
-        return WAP_OK;
+            return WAP_EFILE;
+        return wap_wwd_read(wwd, wwd_buffer.data(), wwd_buffer.size());
     } catch(std::bad_alloc&) {
         return WAP_ENOMEMORY;
     }

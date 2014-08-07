@@ -4,49 +4,37 @@
 #include "buffer.h"
 #include "errors.h"
 #include "io.h"
+#include "wwd_io.h"
 
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
 #include <vector>
 
-enum {
-	WAP_WWD_HEADER_SIZE = 1524,
-    WAP_WWD_PLANE_DESCRIPTION_SIZE = 160,
-    WAP_WWD_OBJECT_DESCRIPTION_SIZE = 284,
-};
-
-struct plane_offsets {
-    unsigned tiles_offset, image_sets_offset, objects_offset;
-};
-
-struct wwd_offsets {
-    unsigned tile_descriptions_offset;
-    unsigned eof_offset;
-    std::vector<plane_offsets> planes_offsets;
-};
-
-static void calculate_offsets(wwd_offsets &offsets, const wap_wwd &wwd)
+static void calculate_offsets(wwd_offsets &offsets, std::vector<wwd_plane_offsets> &planes_offsets, const wap_wwd &wwd)
 {
-    unsigned offset = WAP_WWD_HEADER_SIZE;
     size_t num_planes = wwd.planes.size();
-    offsets.planes_offsets.resize(num_planes);
+    planes_offsets.resize(num_planes);
+    
+    unsigned offset = WAP_WWD_HEADER_SIZE;
+    offsets.main_block_offset = offset;
+    
     offset += num_planes * WAP_WWD_PLANE_DESCRIPTION_SIZE;
     offsets.tile_descriptions_offset = offset;
     
     for(size_t i = 0; i < num_planes; ++i) {
-        offsets.planes_offsets[i].tiles_offset = offset;
+        planes_offsets[i].tiles_offset = offset;
         offset += wwd.planes[i].tiles.size() * 4;
     }
     
     for(size_t i = 0; i < num_planes; ++i) {
-        offsets.planes_offsets[i].image_sets_offset = offset;
+        planes_offsets[i].image_sets_offset = offset;
         for(const std::string &image_set : wwd.planes[i].image_sets)
             offset += image_set.size() + sizeof('\0');
     }
     
     for(size_t i = 0; i < num_planes; ++i) {
-        offsets.planes_offsets[i].objects_offset = offset;
+        planes_offsets[i].objects_offset = offset;
         for(const wap_object &object : wwd.planes[i].objects) {
             offset += WAP_WWD_OBJECT_DESCRIPTION_SIZE;
             offset += object.name.size() + object.logic.size() + object.image_set.size() + object.animation.size();
@@ -111,7 +99,7 @@ static void write_objects(OutputStream &stream, const std::vector<wap_object> &o
 }
 
 static void write_planes(OutputStream &stream, const std::vector<wap_plane> &planes,
-                         const std::vector<plane_offsets> & planes_offsets)
+                         const std::vector<wwd_plane_offsets> & planes_offsets)
 {
     auto plane_offsets = planes_offsets.cbegin();
     for(const wap_plane &plane : planes) {
@@ -159,7 +147,7 @@ static void write_tile_descriptions(OutputStream &stream, const std::vector<wap_
 }
 
 static void write_main_block(OutputStream &stream, const std::vector<wap_plane> &planes,
-                             const std::vector<plane_offsets> &planes_offsets,
+                             const std::vector<wwd_plane_offsets> &planes_offsets,
                              const std::vector<wap_tile_description> &tile_descriptions)
 {
     write_planes(stream, planes, planes_offsets);
@@ -173,7 +161,7 @@ static void write_header(OutputStream &stream, const wap_wwd &wwd, const wwd_off
     unsigned num_planes = wwd.planes.size();
     stream.write(WAP_WWD_HEADER_SIZE);
     stream.write(0, wwdp.flags, 0, wwdp.level_name, wwdp.author, wwdp.birth, wwdp.rez_file, wwdp.image_dir, wwdp.pal_rez,
-                 wwdp.start_x, wwdp.start_y, 0, num_planes, WAP_WWD_HEADER_SIZE, offsets.tile_descriptions_offset,
+                 wwdp.start_x, wwdp.start_y, 0, num_planes, offsets.main_block_offset, offsets.tile_descriptions_offset,
                  decompressed_main_block_size, checksum, 0, wwdp.launch_app, wwdp.image_sets[0], wwdp.image_sets[1],
                  wwdp.image_sets[2], wwdp.image_sets[3], wwdp.prefixes[0], wwdp.prefixes[1], wwdp.prefixes[2],
                  wwdp.prefixes[3]);
@@ -188,18 +176,19 @@ int wap_wwd_write(const wap_wwd *wwd, wap_buffer *out_wwd_buffer)
         const wap_wwd_properties &wwdp = wwd->properties;
         
         wwd_offsets offsets;
-        calculate_offsets(offsets, *wwd);
+        std::vector<wwd_plane_offsets> planes_offsets;
+        calculate_offsets(offsets, planes_offsets, *wwd);
         
         if(wwdp.flags & WAP_WWD_FLAG_COMPRESS) {
-            std::vector<char> main_block(offsets.eof_offset - WAP_WWD_HEADER_SIZE);
+            std::vector<char> main_block(offsets.eof_offset - offsets.main_block_offset);
             OutputStream main_block_stream(main_block.data(), main_block.size());
-            write_main_block(main_block_stream, wwd->planes, offsets.planes_offsets, wwd->tile_descriptions);
+            write_main_block(main_block_stream, wwd->planes, planes_offsets, wwd->tile_descriptions);
             unsigned checksum = wap_util_checksum(main_block.data(), main_block.size());
             std::vector<char> compressed_main_block;
             int error = wap_util_deflate(compressed_main_block, main_block.data(), main_block.size());
             if(error < 0)
                 return WAP_ERROR;
-            wwd_buffer.resize(WAP_WWD_HEADER_SIZE + compressed_main_block.size());
+            wwd_buffer.resize(offsets.main_block_offset + compressed_main_block.size());
             OutputStream stream(wap_buffer_data(out_wwd_buffer), wap_buffer_size(out_wwd_buffer));
             write_header(stream, *wwd, offsets, main_block.size(), checksum);
             stream.write_buffer(compressed_main_block.data(), compressed_main_block.size());
@@ -208,9 +197,9 @@ int wap_wwd_write(const wap_wwd *wwd, wap_buffer *out_wwd_buffer)
             char *buffer = wap_buffer_data(out_wwd_buffer);
             size_t buffer_size = wap_buffer_size(out_wwd_buffer);
             OutputStream stream(buffer, buffer_size);
-            stream.seek(WAP_WWD_HEADER_SIZE);
-            write_main_block(stream, wwd->planes, offsets.planes_offsets, wwd->tile_descriptions);
-            unsigned checksum = wap_util_checksum(buffer + WAP_WWD_HEADER_SIZE, buffer_size - WAP_WWD_HEADER_SIZE);
+            stream.seek(offsets.main_block_offset);
+            write_main_block(stream, wwd->planes, planes_offsets, wwd->tile_descriptions);
+            unsigned checksum = wap_util_checksum(buffer + offsets.main_block_offset, buffer_size - offsets.main_block_offset);
             stream.seek(0);
             write_header(stream, *wwd, offsets, 0, checksum);
         }
