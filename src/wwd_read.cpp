@@ -101,11 +101,11 @@ static void read_planes(wap::InputStream &stream, std::vector<wap_plane> &planes
         unsigned num_image_sets, num_objects;
         
         stream.read(160, 0, planep.flags, 0, planep.name, width_px, height_px, planep.tile_width, planep.tile_height,
-                    planep.tiles_wide, planep.tiles_high, 0, 0, planep.movement_x_percent, planep.movement_y_percent,
+                    plane.tiles_wide, plane.tiles_high, 0, 0, planep.movement_x_percent, planep.movement_y_percent,
                     planep.fill_color, num_image_sets, num_objects, plane_offsets->tiles_offset,
                     plane_offsets->image_sets_offset, plane_offsets->objects_offset, planep.z_coord, 0, 0, 0);
         
-        plane.tiles.resize(planep.tiles_wide * planep.tiles_high);
+        plane.tiles.resize(plane.tiles_wide * plane.tiles_high);
         plane.image_sets.resize(num_image_sets);
         plane.objects.resize(num_objects);
         ++plane_offsets;
@@ -150,7 +150,7 @@ static void read_tile_descriptions(wap::InputStream &stream, std::vector<wap_til
     
     for(wap_tile_description &desc : tile_descriptions) {
         stream.read(desc.type, 0, desc.width, desc.height);
-        if(desc.type == WAP_WWD_TILE_TYPE_SINGLE) {
+        if(desc.type == WAP_TILE_TYPE_SINGLE) {
             stream.read(desc.inside_attrib);
         } else {
             stream.read(desc.outside_attrib, desc.inside_attrib);
@@ -179,11 +179,10 @@ static void read_header(wap::InputStream &stream, wap_wwd &wwd, wwd_offsets &off
     
     wap_wwd_properties &wwdp = wwd.properties;
     unsigned num_planes;
-    unsigned checksum; // Not checked
     
     stream.read(0, wwdp.flags, 0, wwdp.level_name, wwdp.author, wwdp.birth, wwdp.rez_file, wwdp.image_dir, wwdp.pal_rez,
                 wwdp.start_x, wwdp.start_y, 0, num_planes, offsets.main_block_offset, offsets.tile_descriptions_offset,
-                decompressed_main_block_size, checksum, 0, wwdp.launch_app, wwdp.image_sets[0], wwdp.image_sets[1],
+                decompressed_main_block_size, wwd.checksum, 0, wwdp.launch_app, wwdp.image_sets[0], wwdp.image_sets[1],
                 wwdp.image_sets[2], wwdp.image_sets[3], wwdp.prefixes[0], wwdp.prefixes[1], wwdp.prefixes[2],
                 wwdp.prefixes[3]);
     
@@ -226,7 +225,7 @@ void wwd_open(wap_wwd *wwd, const char *file_path)
     std::vector<char> wwd_buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     if(!file.good())
         throw wap::Error(WAP_EFILE);
-    return wwd_read(wwd, wwd_buffer.data(), wwd_buffer.size());
+    wwd_read(wwd, wwd_buffer.data(), wwd_buffer.size());
 }
 
 int wap_wwd_read(wap_wwd *out_wwd, const char *wwd_buffer, size_t wwd_buffer_size)

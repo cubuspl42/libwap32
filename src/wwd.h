@@ -8,7 +8,7 @@
 #include <vector>
 
 struct wap_object {
-    wap_object_properties properties;
+    wap_object_properties properties = {0};
     std::string name;
     std::string logic;
     std::string image_set;
@@ -16,14 +16,17 @@ struct wap_object {
 };
 
 struct wap_plane {
-    wap_plane_properties properties;
+    unsigned tiles_wide = 0;
+    unsigned tiles_high = 0;
+    wap_plane_properties properties = {0};
     std::vector<unsigned> tiles;
 	std::vector<std::string> image_sets;
     std::vector<wap_object> objects;
 };
 
 struct wap_wwd {
-    wap_wwd_properties properties;
+    unsigned checksum = 0;
+    wap_wwd_properties properties = {0};
 	std::vector<wap_plane> planes;
     std::vector<wap_tile_description> tile_descriptions;
 };
