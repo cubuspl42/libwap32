@@ -19,4 +19,11 @@ void wap_util_buffer_printf(char (&buffer)[buffer_size], const char *format, Arg
     wap_util_buffer_printf(buffer, buffer_size, format, args...);
 }
 
+namespace wap {
+    inline bool system_is_big_endian() {
+        int n = 1;
+        return *(char *)&n != 1;
+    }
+}
+
 #endif

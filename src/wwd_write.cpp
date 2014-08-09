@@ -215,7 +215,7 @@ static void write_header(wap::OutputStream &stream, const wap_wwd &wwd, const ww
                  wwdp.prefixes[3]);
 }
 
-void wwd_write(const wap_wwd *wwd, wap_buffer *out_wwd_buffer)
+void wwd_write(const wap_wwd *wwd, std::vector<char> &out_wwd_buffer)
 {
     wap_error_context errctx("writing wwd buffer");
     
@@ -248,7 +248,7 @@ void wwd_write(const wap_wwd *wwd, wap_buffer *out_wwd_buffer)
         write_header(stream, *wwd, offsets, 0, checksum);
     }
     
-    std::swap(wwd_buffer, *wap::cast_wap_buffer_to_vector(out_wwd_buffer));
+    std::swap(wwd_buffer, out_wwd_buffer);
 }
 
 void wwd_save(const wap_wwd *wwd, const char *file_path)
@@ -258,7 +258,7 @@ void wwd_save(const wap_wwd *wwd, const char *file_path)
     if(!file.good())
         throw wap::Error(WAP_EFILE);
     std::vector<char> wwd_buffer;
-    wwd_write(wwd, wap::cast_vector_to_wap_buffer(&wwd_buffer));
+    wwd_write(wwd, wwd_buffer);
     file.write(wwd_buffer.data(), wwd_buffer.size());
     if(!file.good())
         throw wap::Error(WAP_EFILE);
@@ -266,7 +266,7 @@ void wwd_save(const wap_wwd *wwd, const char *file_path)
 
 int wap_wwd_write(const wap_wwd *wwd, wap_buffer *out_wwd_buffer)
 {
-    return wap::handle_exceptions(wwd_write, wwd, out_wwd_buffer);
+    return wap::handle_exceptions(wwd_write, wwd, *wap::cast_wap_buffer_to_vector(out_wwd_buffer));
 }
 
 int wap_wwd_save(const wap_wwd *wwd, const char *file_path)
