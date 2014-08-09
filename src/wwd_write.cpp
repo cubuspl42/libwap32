@@ -23,8 +23,6 @@ std::vector<char> compress_buffer(const char *in_buffer, size_t in_buffer_size)
     strm.opaque = Z_NULL;
     strm.avail_in = in_buffer_size;
     strm.next_in = (unsigned char*)in_buffer;
-    strm.avail_out = 0;
-    strm.next_out = Z_NULL;
     
     int ret = deflateInit(&strm, 9);
     if (ret != Z_OK) {
@@ -89,6 +87,20 @@ static void calculate_offsets(wwd_offsets &offsets, std::vector<wwd_plane_offset
     offsets.eof_offset = offset;
 }
 
+// This function tries to imitate WapWorld's checksum function. It's result is different on all compressed and some
+// non compressed files. That's ok, because as far as I know it's only used to check if two multiplayer clients have the same
+// version of map installed. Partial compatiblity with WapWorld's checksum is just to allow comparing our wwd buffers with
+// WapWorld generated ones during testing.
+
+unsigned wwd_checksum(const char *buffer, size_t buffer_size)
+{
+    unsigned checksum = UINT32_MAX - buffer_size - 159;
+    for(size_t i = 0; i < buffer_size; ++i) {
+        unsigned delta = (i - (unsigned char)buffer[i]);
+        checksum -= delta;
+    }
+    return checksum;
+}
 
 static void write_rect(wap::OutputStream &stream, const wap_rect &rect)
 {
@@ -221,7 +233,7 @@ int wap_wwd_write(const wap_wwd *wwd, wap_buffer *out_wwd_buffer)
         std::vector<char> compressed_main_block = compress_buffer(main_block.data(), main_block.size());
         wwd_buffer.resize(offsets.main_block_offset + compressed_main_block.size());
         wap::OutputStream stream(wwd_buffer.data(), wwd_buffer.size());
-        unsigned checksum = wap_util_checksum(main_block.data(), main_block.size());
+        unsigned checksum = wwd_checksum(main_block.data(), main_block.size());
         write_header(stream, *wwd, offsets, main_block.size(), checksum);
         stream.write_buffer(compressed_main_block.data(), compressed_main_block.size());
     } else {
@@ -231,7 +243,7 @@ int wap_wwd_write(const wap_wwd *wwd, wap_buffer *out_wwd_buffer)
         write_main_block(stream, wwd->planes, planes_offsets, wwd->tile_descriptions);
         char *main_block = wwd_buffer.data() + offsets.main_block_offset;
         size_t main_block_size = wwd_buffer.size() - offsets.main_block_offset;
-        unsigned checksum = wap_util_checksum(main_block, main_block_size);
+        unsigned checksum = wwd_checksum(main_block, main_block_size);
         stream.seek(0);
         write_header(stream, *wwd, offsets, 0, checksum);
     }

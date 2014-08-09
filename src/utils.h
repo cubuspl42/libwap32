@@ -19,6 +19,4 @@ void wap_util_buffer_printf(char (&buffer)[buffer_size], const char *format, Arg
     wap_util_buffer_printf(buffer, buffer_size, format, args...);
 }
 
-unsigned wap_util_checksum(const char *buffer, size_t buffer_size);
-
 #endif

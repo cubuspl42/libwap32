@@ -97,7 +97,7 @@ static void read_planes(wap::InputStream &stream, std::vector<wap_plane> &planes
     auto plane_offsets = planes_offsets.begin();
     for(wap_plane &plane : planes) {
         auto &planep = plane.properties;
-        unsigned height_px, width_px; // TODO: These values are not actually checked
+        unsigned width_px, height_px; // These values are not actually checked
         unsigned num_image_sets, num_objects;
         
         stream.read(160, 0, planep.flags, 0, planep.name, width_px, height_px, planep.tile_width, planep.tile_height,
@@ -174,10 +174,8 @@ static void read_header(wap::InputStream &stream, wap_wwd &wwd, wwd_offsets &off
     unsigned signature;
     stream.read(signature);
     
-    if(signature != WAP_WWD_HEADER_SIZE) {
-        wap_err__critical("input buffer does not have WWD signature");
-        //return WAP_EINVALIDDATA;
-    }
+    if(signature != WAP_WWD_HEADER_SIZE)
+        throw wap::Error(WAP_EINVALIDDATA);
     
     wap_wwd_properties &wwdp = wwd.properties;
     unsigned num_planes;
