@@ -4,6 +4,8 @@
 #include "common.h"
 #include "buffer.h"
 
+#include <stdint.h>
+
 WAP_BEGIN_DECLS
 
 enum {
@@ -21,7 +23,7 @@ enum {
 };
 
 enum {
-    WAP_PLANE_FLAG_MAIN_PLANE       = 1 << 0, /* Only one plain should hold this flag */
+    WAP_PLANE_FLAG_MAIN_PLANE       = 1 << 0, /* Only one plane should hold this flag */
     WAP_PLANE_FLAG_NO_DRAW          = 1 << 1,
     WAP_PLANE_FLAG_X_WRAPPING       = 1 << 2,
     WAP_PLANE_FLAG_Y_WRAPPING       = 1 << 3,
@@ -90,14 +92,14 @@ typedef struct wap_plane wap_plane;
 typedef struct wap_object wap_object;
 
 typedef struct {
-	unsigned left;
-	unsigned top;
-	unsigned right;
-	unsigned bottom;
+	uint32_t left;
+	uint32_t top;
+	uint32_t right;
+	uint32_t bottom;
 } wap_rect;
 
 typedef struct {
-    unsigned flags; /* WAP_WWD_FLAG_ */
+    uint32_t flags; /* WAP_WWD_FLAG_ */
     /* WapWorld expects all these char buffers to be null-terminated */
     char level_name[64];
     char author[64];
@@ -105,75 +107,75 @@ typedef struct {
     char rez_file[256];
     char image_dir[128];
     char pal_rez[128];
-    int start_x;
-    int start_y;
+    int32_t start_x;
+    int32_t start_y;
     char launch_app[128];
     char image_sets[4][128];
     char prefixes[4][32];
 } wap_wwd_properties;
 
 typedef struct {
-    unsigned flags; /* WAP_PLANE_FLAG_ flags */
+    uint32_t flags; /* WAP_PLANE_FLAG_ flags */
     char name[64]; /* WapWorld expects this char buffer to be null-terminated */
-    unsigned tile_width; /* tile's width in pixels */
-    unsigned tile_height; /* tile's height in pixels */
-    int movement_x_percent;
-    int movement_y_percent;
-    unsigned fill_color; /* TODO: introduce wap_color struct */
-    int z_coord;
+    uint32_t tile_width; /* tile's width in pixels */
+    uint32_t tile_height; /* tile's height in pixels */
+    int32_t movement_x_percent;
+    int32_t movement_y_percent;
+    uint32_t fill_color; /* TODO: introduce wap_color struct */
+    int32_t z_coord;
 } wap_plane_properties;
 
 typedef struct {
-    int id; /* Any value is accepted by WapWorld, but a good id should be positive and unique. */
-    int x;
-    int y;
-    int z;
-    int i;
-    unsigned add_flags; /* WAP_OBJECT_ADD_FLAG_ flags */
-    unsigned dynamic_flags; /* WAP_OBJECT_DYNAMIC_FLAG_ flags */
-    unsigned draw_flags; /* WAP_OBJECT_DRAW_FLAG_ flags */
-    unsigned user_flags; /* WAP_OBJECT_USER_FLAG_ flags */
-    int score;
-    int points;
-    int powerup;
-    int damage;
-    int smarts;
-    int health;
+    int32_t id; /* Any value is accepted by WapWorld, but a good id should be positive and unique. */
+    int32_t x;
+    int32_t y;
+    int32_t z;
+    int32_t i;
+    uint32_t add_flags; /* WAP_OBJECT_ADD_FLAG_ flags */
+    uint32_t dynamic_flags; /* WAP_OBJECT_DYNAMIC_FLAG_ flags */
+    uint32_t draw_flags; /* WAP_OBJECT_DRAW_FLAG_ flags */
+    uint32_t user_flags; /* WAP_OBJECT_USER_FLAG_ flags */
+    int32_t score;
+    int32_t points;
+    int32_t powerup;
+    int32_t damage;
+    int32_t smarts;
+    int32_t health;
     wap_rect move_rect;
     wap_rect hit_rect;
     wap_rect attack_rect;
     wap_rect clip_rect;
     wap_rect user_rects[2];
-    int user_values[8];
-    int x_min;
-    int y_min;
-    int x_max;
-    int y_max;
-    int speed_x;
-    int speed_y;
-    int x_tweak;
-    int y_tweak;
-    int counter;
-    int speed;
-    int width;
-    int height;
-    int direction;
-    int face_dir;
-    int time_delay;
-    int frame_delay;
-    unsigned object_type; /* WAP_OBJECT_TYPE_ single value */
-    unsigned hit_type_flags; /* WAP_OBJECT_TYPE_ flags */
-    int x_move_res;
-    int y_move_res;
+    int32_t user_values[8];
+    int32_t x_min;
+    int32_t y_min;
+    int32_t x_max;
+    int32_t y_max;
+    int32_t speed_x;
+    int32_t speed_y;
+    int32_t x_tweak;
+    int32_t y_tweak;
+    int32_t counter;
+    int32_t speed;
+    int32_t width;
+    int32_t height;
+    int32_t direction;
+    int32_t face_dir;
+    int32_t time_delay;
+    int32_t frame_delay;
+    uint32_t object_type; /* WAP_OBJECT_TYPE_ single value */
+    uint32_t hit_type_flags; /* WAP_OBJECT_TYPE_ flags */
+    int32_t x_move_res;
+    int32_t y_move_res;
 } wap_object_properties;
 
 typedef struct {
-    unsigned type; /* WAP_TILE_TYPE_ single value */
-    unsigned width; /* in pixels */
-    unsigned height; /* in pixels */
-    unsigned inside_attrib; /* WAP_TILE_ATTRIBUTE_ */
+    uint32_t type; /* WAP_TILE_TYPE_ single value */
+    uint32_t width; /* in pixels */
+    uint32_t height; /* in pixels */
+    uint32_t inside_attrib; /* WAP_TILE_ATTRIBUTE_ */
     /* outside_attrib and rect only if type == WAP_TILE_TYPE_DOUBLE */
-    unsigned outside_attrib; /* WAP_TILE_ATTRIBUTE_ */
+    uint32_t outside_attrib; /* WAP_TILE_ATTRIBUTE_ */
     wap_rect rect;
 } wap_tile_description;
 
@@ -197,52 +199,52 @@ WAP_API int wap_wwd_save(const wap_wwd *wwd, const char *file_path);
 /* Get the checksum calculated by a program that created the WWD buffer that was read using wap_wwd_read or wap_wwd_open.
  * Returns zero if no such buffer was read.
  */
-WAP_API unsigned wap_wwd_get_checksum(const wap_wwd *wwd);
+WAP_API uint32_t wap_wwd_get_checksum(const wap_wwd *wwd);
 
-WAP_API size_t wap_wwd_get_plane_count(const wap_wwd *wwd);
-
-/* Possible error: WAP_ENOMEMORY */
-WAP_API int wap_wwd_set_plane_count(wap_wwd *wwd, size_t count);
-
-WAP_API wap_plane *wap_wwd_get_plane(wap_wwd *wwd, size_t plane_index);
-
-WAP_API size_t wap_wwd_get_tile_description_count(const wap_wwd *wwd);
+WAP_API uint32_t wap_wwd_get_plane_count(const wap_wwd *wwd);
 
 /* Possible error: WAP_ENOMEMORY */
-WAP_API int wap_wwd_set_tile_description_count(const wap_wwd *wwd, size_t count);
+WAP_API int wap_wwd_set_plane_count(wap_wwd *wwd, uint32_t count);
 
-WAP_API wap_tile_description *wap_wwd_get_tile_description(wap_wwd *wwd, size_t description_index);
+WAP_API wap_plane *wap_wwd_get_plane(wap_wwd *wwd, uint32_t plane_index);
+
+WAP_API uint32_t wap_wwd_get_tile_description_count(const wap_wwd *wwd);
+
+/* Possible error: WAP_ENOMEMORY */
+WAP_API int wap_wwd_set_tile_description_count(const wap_wwd *wwd, uint32_t count);
+
+WAP_API wap_tile_description *wap_wwd_get_tile_description(wap_wwd *wwd, uint32_t description_index);
 
 WAP_API wap_wwd_properties *wap_wwd_get_properties(wap_wwd *wwd);
 
-WAP_API void wap_plane_get_map_dimensions(wap_plane *plane, unsigned *w, unsigned *h);
+WAP_API void wap_plane_get_map_dimensions(wap_plane *plane, uint32_t *w, uint32_t *h);
 
 /* Note: after changing map's dimensions, value returned by wap_plane_get_tile(plane, x, y) is undefined for any x, y until you
  * call wap_plane_set_tile(plane, x, y, tile) or read a new buffer with wap_wwd_read or wap_wwd_open.
  * Possible error: WAP_ENOMEMORY
  */
-WAP_API int wap_plane_set_map_dimensions(wap_plane *plane, unsigned w, unsigned h);
+WAP_API int wap_plane_set_map_dimensions(wap_plane *plane, uint32_t w, uint32_t h);
 
-WAP_API unsigned wap_plane_get_tile(const wap_plane *plane, unsigned x, unsigned y);
+WAP_API uint32_t wap_plane_get_tile(const wap_plane *plane, uint32_t x, uint32_t y);
 
-WAP_API void wap_plane_set_tile(wap_plane *plane, unsigned x, unsigned y, unsigned tile);
+WAP_API void wap_plane_set_tile(wap_plane *plane, uint32_t x, uint32_t y, uint32_t tile);
 
-WAP_API size_t wap_plane_get_image_set_count(const wap_plane *plane);
-
-/* Possible error: WAP_ENOMEMORY */
-WAP_API int wap_plane_set_image_set_count(wap_plane *plane, size_t count);
-
-WAP_API const char *wap_plane_get_image_set(const wap_plane *plane, size_t image_set_index);
+WAP_API uint32_t wap_plane_get_image_set_count(const wap_plane *plane);
 
 /* Possible error: WAP_ENOMEMORY */
-WAP_API int wap_plane_set_image_set(wap_plane *plane, size_t image_set_index, const char *image_set);
+WAP_API int wap_plane_set_image_set_count(wap_plane *plane, uint32_t count);
 
-WAP_API size_t wap_plane_get_object_count(const wap_plane *plane);
+WAP_API const char *wap_plane_get_image_set(const wap_plane *plane, uint32_t image_set_index);
 
 /* Possible error: WAP_ENOMEMORY */
-WAP_API int wap_plane_set_object_count(wap_plane *plane, size_t count);
+WAP_API int wap_plane_set_image_set(wap_plane *plane, uint32_t image_set_index, const char *image_set);
 
-WAP_API wap_object *wap_plane_get_object(wap_plane *plane, size_t object_index);
+WAP_API uint32_t wap_plane_get_object_count(const wap_plane *plane);
+
+/* Possible error: WAP_ENOMEMORY */
+WAP_API int wap_plane_set_object_count(wap_plane *plane, uint32_t count);
+
+WAP_API wap_object *wap_plane_get_object(wap_plane *plane, uint32_t object_index);
 
 WAP_API wap_plane_properties *wap_plane_get_properties(wap_plane *plane);
 

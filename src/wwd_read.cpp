@@ -66,7 +66,7 @@ static void read_objects(wap::InputStream &stream, std::vector<wap_object> &obje
     for(wap_object &obj : objects) {
         auto &objp = obj.properties;
         
-        unsigned name_len, logic_len, image_set_len, animation_len;
+        uint32_t name_len, logic_len, image_set_len, animation_len;
         stream.read(objp.id, name_len, logic_len, image_set_len, animation_len, objp.x, objp.y, objp.z, objp.i, objp.add_flags,
                     objp.dynamic_flags, objp.draw_flags, objp.user_flags, objp.score, objp.points, objp.powerup, objp.damage,
                     objp.smarts, objp.health);
@@ -97,8 +97,8 @@ static void read_planes(wap::InputStream &stream, std::vector<wap_plane> &planes
     auto plane_offsets = planes_offsets.begin();
     for(wap_plane &plane : planes) {
         auto &planep = plane.properties;
-        unsigned width_px, height_px; // These values are not actually checked
-        unsigned num_image_sets, num_objects;
+        uint32_t width_px, height_px; // These values are not actually checked
+        uint32_t num_image_sets, num_objects;
         
         stream.read(160, 0, planep.flags, 0, planep.name, width_px, height_px, planep.tile_width, planep.tile_height,
                     plane.tiles_wide, plane.tiles_high, 0, 0, planep.movement_x_percent, planep.movement_y_percent,
@@ -115,7 +115,7 @@ static void read_planes(wap::InputStream &stream, std::vector<wap_plane> &planes
     for(wap_plane &plane : planes) {
         if(!plane.tiles.empty()) {
             stream.seek(plane_offsets->tiles_offset);
-            for(unsigned &tile : plane.tiles)
+            for(uint32_t &tile : plane.tiles)
                 stream.read(tile);
         }
         ++plane_offsets;
@@ -143,7 +143,7 @@ static void read_planes(wap::InputStream &stream, std::vector<wap_plane> &planes
 
 static void read_tile_descriptions(wap::InputStream &stream, std::vector<wap_tile_description> &tile_descriptions)
 {
-    unsigned num_tile_descriptions;
+    uint32_t num_tile_descriptions;
     stream.read(32, 0, num_tile_descriptions, 0, 0, 0, 0, 0);
     
     tile_descriptions.resize(num_tile_descriptions);
@@ -169,16 +169,16 @@ static void read_main_block(wap::InputStream &stream, std::vector<wap_plane> &pl
     read_tile_descriptions(stream, tile_descriptions);
 }
 
-static void read_header(wap::InputStream &stream, wap_wwd &wwd, wwd_offsets &offsets, unsigned &decompressed_main_block_size)
+static void read_header(wap::InputStream &stream, wap_wwd &wwd, wwd_offsets &offsets, uint32_t &decompressed_main_block_size)
 {
-    unsigned signature;
+    uint32_t signature;
     stream.read(signature);
     
     if(signature != WAP_WWD_HEADER_SIZE)
         throw wap::Error(WAP_EINVALIDDATA);
     
     wap_wwd_properties &wwdp = wwd.properties;
-    unsigned num_planes;
+    uint32_t num_planes;
     
     stream.read(0, wwdp.flags, 0, wwdp.level_name, wwdp.author, wwdp.birth, wwdp.rez_file, wwdp.image_dir, wwdp.pal_rez,
                 wwdp.start_x, wwdp.start_y, 0, num_planes, offsets.main_block_offset, offsets.tile_descriptions_offset,
@@ -198,7 +198,7 @@ void wwd_read(wap_wwd *out_wwd, const char *wwd_buffer, size_t wwd_buffer_size)
     
     wap_wwd_properties &wwdp = wwd.properties;
     wwd_offsets offsets;
-    unsigned decompressed_main_block_size;
+    uint32_t decompressed_main_block_size;
     read_header(stream, wwd, offsets, decompressed_main_block_size);
     
     if(wwdp.flags & WAP_WWD_FLAG_COMPRESS) {
