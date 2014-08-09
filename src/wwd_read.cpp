@@ -6,23 +6,50 @@
 #include "io.h"
 #include "wwd_io.h"
 
+#include <zlib.h>
+
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
 #include <vector>
 
-static void read_rect(InputStream &stream, wap_rect &rect)
+void decompress_buffer(char *out_buffer, size_t out_buffer_size, const char *in_buffer, size_t in_buffer_size)
+{
+    z_stream strm;
+    strm.zalloc = Z_NULL;
+    strm.zfree = Z_NULL;
+    strm.opaque = Z_NULL;
+    strm.avail_in = in_buffer_size;
+    strm.next_in = (unsigned char*)in_buffer;
+    strm.avail_out = out_buffer_size;
+    strm.next_out = (unsigned char*)out_buffer;
+    
+    int ret = inflateInit(&strm);
+    if (ret != Z_OK) {
+        inflateEnd(&strm);
+        throw wap::Error::from_zlib_error(ret);
+    }
+    
+    ret = inflate(&strm, Z_FINISH);
+    inflateEnd(&strm);
+    
+    if(ret != Z_STREAM_END) {
+        throw wap::Error::from_zlib_error(ret);
+    }
+}
+
+static void read_rect(wap::InputStream &stream, wap_rect &rect)
 {
     stream.read(rect.left, rect.top, rect.right, rect.bottom);
 }
 
-static void read_string(InputStream &stream, std::string &str, size_t len)
+static void read_string(wap::InputStream &stream, std::string &str, size_t len)
 {
     str.resize(len);
     stream.read_buffer(&str[0], str.size());
 }
 
-static void read_nullterminated_string(InputStream &stream, std::string &str)
+static void read_nullterminated_string(wap::InputStream &stream, std::string &str)
 {
     str.erase();
     char c = '\0';
@@ -34,11 +61,11 @@ static void read_nullterminated_string(InputStream &stream, std::string &str)
     }
 }
 
-static void read_objects(InputStream &stream, std::vector<wap_object> &objects)
+static void read_objects(wap::InputStream &stream, std::vector<wap_object> &objects)
 {
     for(wap_object &obj : objects) {
         auto &objp = obj.properties;
-
+        
         unsigned name_len, logic_len, image_set_len, animation_len;
         stream.read(objp.id, name_len, logic_len, image_set_len, animation_len, objp.x, objp.y, objp.z, objp.i, objp.add_flags,
                     objp.dynamic_flags, objp.draw_flags, objp.user_flags, objp.score, objp.points, objp.powerup, objp.damage,
@@ -63,7 +90,7 @@ static void read_objects(InputStream &stream, std::vector<wap_object> &objects)
     }
 }
 
-static void read_planes(InputStream &stream, std::vector<wap_plane> &planes)
+static void read_planes(wap::InputStream &stream, std::vector<wap_plane> &planes)
 {
     std::vector<wwd_plane_offsets> planes_offsets(planes.size());
     
@@ -114,7 +141,7 @@ static void read_planes(InputStream &stream, std::vector<wap_plane> &planes)
     }
 }
 
-static void read_tile_descriptions(InputStream &stream, std::vector<wap_tile_description> &tile_descriptions)
+static void read_tile_descriptions(wap::InputStream &stream, std::vector<wap_tile_description> &tile_descriptions)
 {
     unsigned num_tile_descriptions;
     stream.read(32, 0, num_tile_descriptions, 0, 0, 0, 0, 0);
@@ -132,7 +159,7 @@ static void read_tile_descriptions(InputStream &stream, std::vector<wap_tile_des
     }
 }
 
-static void read_main_block(InputStream &stream, std::vector<wap_plane> &planes,
+static void read_main_block(wap::InputStream &stream, std::vector<wap_plane> &planes,
                             std::vector<wap_tile_description> &tile_descriptions, const wwd_offsets &offsets)
 {
     stream.seek(offsets.main_block_offset);
@@ -142,7 +169,7 @@ static void read_main_block(InputStream &stream, std::vector<wap_plane> &planes,
     read_tile_descriptions(stream, tile_descriptions);
 }
 
-static void read_header(InputStream &stream, wap_wwd &wwd, wwd_offsets &offsets, unsigned &decompressed_main_block_size)
+static void read_header(wap::InputStream &stream, wap_wwd &wwd, wwd_offsets &offsets, unsigned &decompressed_main_block_size)
 {
     unsigned signature;
     stream.read(signature);
@@ -157,55 +184,59 @@ static void read_header(InputStream &stream, wap_wwd &wwd, wwd_offsets &offsets,
     unsigned checksum; // Not checked
     
     stream.read(0, wwdp.flags, 0, wwdp.level_name, wwdp.author, wwdp.birth, wwdp.rez_file, wwdp.image_dir, wwdp.pal_rez,
-                 wwdp.start_x, wwdp.start_y, 0, num_planes, offsets.main_block_offset, offsets.tile_descriptions_offset,
-                 decompressed_main_block_size, checksum, 0, wwdp.launch_app, wwdp.image_sets[0], wwdp.image_sets[1],
-                 wwdp.image_sets[2], wwdp.image_sets[3], wwdp.prefixes[0], wwdp.prefixes[1], wwdp.prefixes[2],
-                 wwdp.prefixes[3]);
+                wwdp.start_x, wwdp.start_y, 0, num_planes, offsets.main_block_offset, offsets.tile_descriptions_offset,
+                decompressed_main_block_size, checksum, 0, wwdp.launch_app, wwdp.image_sets[0], wwdp.image_sets[1],
+                wwdp.image_sets[2], wwdp.image_sets[3], wwdp.prefixes[0], wwdp.prefixes[1], wwdp.prefixes[2],
+                wwdp.prefixes[3]);
     
     wwd.planes.resize(num_planes);
 }
 
-int wap_wwd_read(wap_wwd *wwd, const char *wwd_buffer, size_t wwd_buffer_size)
+void wwd_read(wap_wwd *out_wwd, const char *wwd_buffer, size_t wwd_buffer_size)
 {
-    try {
-        wap_error_context errctx("reading wwd buffer");
-        InputStream stream(wwd_buffer, wwd_buffer_size);
-        
-        wap_wwd_properties &wwdp = wwd->properties;
-        wwd_offsets offsets;
-        unsigned decompressed_main_block_size;
-        read_header(stream, *wwd, offsets, decompressed_main_block_size);
-        
-        if(wwdp.flags & WAP_WWD_FLAG_COMPRESS) {
-            std::vector<char> decompressed_buffer(WAP_WWD_HEADER_SIZE + decompressed_main_block_size);
-            memcpy(&decompressed_buffer[0], wwd_buffer, WAP_WWD_HEADER_SIZE);
-            const char *main_block = wwd_buffer + WAP_WWD_HEADER_SIZE;
-            const size_t main_block_size = wwd_buffer_size - WAP_WWD_HEADER_SIZE;
-            char *decompressed_main_block = &decompressed_buffer[WAP_WWD_HEADER_SIZE];
-            int error = wap_util_inflate(decompressed_main_block, decompressed_main_block_size, main_block, main_block_size);
-            if(error < 0)
-                return WAP_EINVALIDDATA;
-            InputStream stream_decompressed(&decompressed_buffer[0], decompressed_buffer.size(), stream.tell());
-            read_main_block(stream_decompressed, wwd->planes, wwd->tile_descriptions, offsets);
-        } else {
-            read_main_block(stream, wwd->planes, wwd->tile_descriptions, offsets);
-        }
-    } catch (InputStream::EndOfBuffer&) {
-        return WAP_EINVALIDDATA;
+    wap_error_context errctx("reading wwd buffer");
+    wap_wwd wwd;
+    
+    wap::InputStream stream(wwd_buffer, wwd_buffer_size);
+    
+    wap_wwd_properties &wwdp = wwd.properties;
+    wwd_offsets offsets;
+    unsigned decompressed_main_block_size;
+    read_header(stream, wwd, offsets, decompressed_main_block_size);
+    
+    if(wwdp.flags & WAP_WWD_FLAG_COMPRESS) {
+        std::vector<char> decompressed_buffer(offsets.main_block_offset + decompressed_main_block_size);
+        memcpy(decompressed_buffer.data(), wwd_buffer, offsets.main_block_offset);
+        const char *compressed_main_block = wwd_buffer + offsets.main_block_offset;
+        size_t compressed_main_block_size = wwd_buffer_size - offsets.main_block_offset;
+        char *decompressed_main_block = decompressed_buffer.data() + offsets.main_block_offset;
+        decompress_buffer(decompressed_main_block, decompressed_main_block_size,
+                          compressed_main_block, compressed_main_block_size);
+        wap::InputStream stream_decompressed(&decompressed_buffer[0], decompressed_buffer.size(), stream.tell());
+        read_main_block(stream_decompressed, wwd.planes, wwd.tile_descriptions, offsets);
+    } else {
+        read_main_block(stream, wwd.planes, wwd.tile_descriptions, offsets);
     }
-    return WAP_OK;
+    
+    std::swap(wwd, *out_wwd);
+}
+
+void wwd_open(wap_wwd *wwd, const char *file_path)
+{
+    wap_error_context errctx("opening file '%s'", file_path);
+    std::ifstream file(file_path, std::ios::binary);
+    std::vector<char> wwd_buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    if(!file.good())
+        throw wap::Error(WAP_EFILE);
+    return wwd_read(wwd, wwd_buffer.data(), wwd_buffer.size());
+}
+
+int wap_wwd_read(wap_wwd *out_wwd, const char *wwd_buffer, size_t wwd_buffer_size)
+{
+    return wap::handle_exceptions(wwd_read, out_wwd, wwd_buffer, wwd_buffer_size);
 }
 
 int wap_wwd_open(wap_wwd *wwd, const char *file_path)
 {
-    try {
-        wap_error_context errctx("opening file '%s'", file_path);
-        std::ifstream file(file_path, std::ios::binary);
-        std::vector<char> wwd_buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        if(!file.good())
-            return WAP_EFILE;
-        return wap_wwd_read(wwd, wwd_buffer.data(), wwd_buffer.size());
-    } catch(std::bad_alloc&) {
-        return WAP_ENOMEMORY;
-    }
+    return wap::handle_exceptions(wwd_open, wwd, file_path);
 }

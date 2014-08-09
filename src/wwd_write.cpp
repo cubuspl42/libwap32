@@ -6,10 +6,46 @@
 #include "io.h"
 #include "wwd_io.h"
 
+#include <zlib.h>
+
 #include <algorithm>
 #include <cstdlib>
 #include <fstream>
 #include <vector>
+
+std::vector<char> compress_buffer(const char *in_buffer, size_t in_buffer_size)
+{
+    std::vector<char> out_buffer;
+    
+    z_stream strm;
+    strm.zalloc = Z_NULL;
+    strm.zfree = Z_NULL;
+    strm.opaque = Z_NULL;
+    strm.avail_in = in_buffer_size;
+    strm.next_in = (unsigned char*)in_buffer;
+    strm.avail_out = 0;
+    strm.next_out = Z_NULL;
+    
+    int ret = deflateInit(&strm, 9);
+    if (ret != Z_OK) {
+        deflateEnd(&strm);
+        throw wap::Error::from_zlib_error(ret);
+    }
+    
+    out_buffer.resize(0);
+    
+    do {
+        constexpr size_t step = 64 * 1024;
+        out_buffer.resize(out_buffer.size() + step);
+        strm.avail_out = out_buffer.capacity() - strm.total_out;
+        strm.next_out = (unsigned char*)out_buffer.data() + strm.total_out;
+        ret = deflate(&strm, Z_FINISH);
+    } while (ret != Z_STREAM_END);
+    
+    deflateEnd(&strm);
+    out_buffer.resize(out_buffer.capacity() - strm.avail_out);
+    return out_buffer;
+}
 
 static void calculate_offsets(wwd_offsets &offsets, std::vector<wwd_plane_offsets> &planes_offsets, const wap_wwd &wwd)
 {
@@ -54,22 +90,22 @@ static void calculate_offsets(wwd_offsets &offsets, std::vector<wwd_plane_offset
 }
 
 
-static void write_rect(OutputStream &stream, const wap_rect &rect)
+static void write_rect(wap::OutputStream &stream, const wap_rect &rect)
 {
     stream.write(rect.left, rect.top, rect.right, rect.bottom);
 }
 
-static void write_string(OutputStream &stream, const std::string &str)
+static void write_string(wap::OutputStream &stream, const std::string &str)
 {
     stream.write_buffer(str.data(), str.size());
 }
 
-static void write_nullterminated_string(OutputStream &stream, const std::string &str)
+static void write_nullterminated_string(wap::OutputStream &stream, const std::string &str)
 {
     stream.write_buffer(str.c_str(), str.size()+1);
 }
 
-static void write_objects(OutputStream &stream, const std::vector<wap_object> &objects)
+static void write_objects(wap::OutputStream &stream, const std::vector<wap_object> &objects)
 {
     for(const wap_object &obj : objects) {
         auto &objp = obj.properties;
@@ -98,7 +134,7 @@ static void write_objects(OutputStream &stream, const std::vector<wap_object> &o
     }
 }
 
-static void write_planes(OutputStream &stream, const std::vector<wap_plane> &planes,
+static void write_planes(wap::OutputStream &stream, const std::vector<wap_plane> &planes,
                          const std::vector<wwd_plane_offsets> & planes_offsets)
 {
     auto plane_offsets = planes_offsets.cbegin();
@@ -131,7 +167,7 @@ static void write_planes(OutputStream &stream, const std::vector<wap_plane> &pla
     }
 }
 
-static void write_tile_descriptions(OutputStream &stream, const std::vector<wap_tile_description> &tile_descriptions)
+static void write_tile_descriptions(wap::OutputStream &stream, const std::vector<wap_tile_description> &tile_descriptions)
 {
     stream.write(32, 0, (unsigned)tile_descriptions.size(), 0, 0, 0, 0, 0);
     
@@ -146,7 +182,7 @@ static void write_tile_descriptions(OutputStream &stream, const std::vector<wap_
     }
 }
 
-static void write_main_block(OutputStream &stream, const std::vector<wap_plane> &planes,
+static void write_main_block(wap::OutputStream &stream, const std::vector<wap_plane> &planes,
                              const std::vector<wwd_plane_offsets> &planes_offsets,
                              const std::vector<wap_tile_description> &tile_descriptions)
 {
@@ -154,7 +190,7 @@ static void write_main_block(OutputStream &stream, const std::vector<wap_plane> 
     write_tile_descriptions(stream, tile_descriptions);
 }
 
-static void write_header(OutputStream &stream, const wap_wwd &wwd, const wwd_offsets &offsets,
+static void write_header(wap::OutputStream &stream, const wap_wwd &wwd, const wwd_offsets &offsets,
                          unsigned decompressed_main_block_size, unsigned checksum)
 {
     const wap_wwd_properties &wwdp = wwd.properties;
@@ -169,43 +205,38 @@ static void write_header(OutputStream &stream, const wap_wwd &wwd, const wwd_off
 
 int wap_wwd_write(const wap_wwd *wwd, wap_buffer *out_wwd_buffer)
 {
-    try {
-        wap_error_context errctx("writing wwd buffer");
-        
-        std::vector<char> &wwd_buffer = wap_buffer__vector(out_wwd_buffer);
-        const wap_wwd_properties &wwdp = wwd->properties;
-        
-        wwd_offsets offsets;
-        std::vector<wwd_plane_offsets> planes_offsets;
-        calculate_offsets(offsets, planes_offsets, *wwd);
-        
-        if(wwdp.flags & WAP_WWD_FLAG_COMPRESS) {
-            std::vector<char> main_block(offsets.eof_offset - offsets.main_block_offset);
-            OutputStream main_block_stream(main_block.data(), main_block.size());
-            write_main_block(main_block_stream, wwd->planes, planes_offsets, wwd->tile_descriptions);
-            unsigned checksum = wap_util_checksum(main_block.data(), main_block.size());
-            std::vector<char> compressed_main_block;
-            int error = wap_util_deflate(compressed_main_block, main_block.data(), main_block.size());
-            if(error < 0)
-                return WAP_ERROR;
-            wwd_buffer.resize(offsets.main_block_offset + compressed_main_block.size());
-            OutputStream stream(wap_buffer_data(out_wwd_buffer), wap_buffer_size(out_wwd_buffer));
-            write_header(stream, *wwd, offsets, main_block.size(), checksum);
-            stream.write_buffer(compressed_main_block.data(), compressed_main_block.size());
-        } else {
-            wwd_buffer.resize(offsets.eof_offset);
-            char *buffer = wap_buffer_data(out_wwd_buffer);
-            size_t buffer_size = wap_buffer_size(out_wwd_buffer);
-            OutputStream stream(buffer, buffer_size);
-            stream.seek(offsets.main_block_offset);
-            write_main_block(stream, wwd->planes, planes_offsets, wwd->tile_descriptions);
-            unsigned checksum = wap_util_checksum(buffer + offsets.main_block_offset, buffer_size - offsets.main_block_offset);
-            stream.seek(0);
-            write_header(stream, *wwd, offsets, 0, checksum);
-        }
-    } catch (OutputStream::EndOfBuffer&) {
-        return WAP_EINVALIDDATA;
+    wap_error_context errctx("writing wwd buffer");
+    
+    wwd_offsets offsets;
+    std::vector<wwd_plane_offsets> planes_offsets;
+    calculate_offsets(offsets, planes_offsets, *wwd);
+    
+    std::vector<char> wwd_buffer;
+    const wap_wwd_properties &wwdp = wwd->properties;
+    
+    if(wwdp.flags & WAP_WWD_FLAG_COMPRESS) {
+        std::vector<char> main_block(offsets.eof_offset - offsets.main_block_offset);
+        wap::OutputStream main_block_stream(main_block.data(), main_block.size());
+        write_main_block(main_block_stream, wwd->planes, planes_offsets, wwd->tile_descriptions);
+        std::vector<char> compressed_main_block = compress_buffer(main_block.data(), main_block.size());
+        wwd_buffer.resize(offsets.main_block_offset + compressed_main_block.size());
+        wap::OutputStream stream(wwd_buffer.data(), wwd_buffer.size());
+        unsigned checksum = wap_util_checksum(main_block.data(), main_block.size());
+        write_header(stream, *wwd, offsets, main_block.size(), checksum);
+        stream.write_buffer(compressed_main_block.data(), compressed_main_block.size());
+    } else {
+        wwd_buffer.resize(offsets.eof_offset);
+        wap::OutputStream stream(wwd_buffer.data(), wwd_buffer.size());
+        stream.seek(offsets.main_block_offset);
+        write_main_block(stream, wwd->planes, planes_offsets, wwd->tile_descriptions);
+        char *main_block = wwd_buffer.data() + offsets.main_block_offset;
+        size_t main_block_size = wwd_buffer.size() - offsets.main_block_offset;
+        unsigned checksum = wap_util_checksum(main_block, main_block_size);
+        stream.seek(0);
+        write_header(stream, *wwd, offsets, 0, checksum);
     }
+    
+    std::swap(wwd_buffer, *wap::cast_wap_buffer_to_vector(out_wwd_buffer));
     return WAP_OK;
 }
 
@@ -216,13 +247,11 @@ int wap_wwd_save(const wap_wwd *wwd, const char *file_path)
         std::ofstream file(file_path, std::ios::binary);
         if(!file.good())
             return WAP_EFILE;
-        wap_buffer wwd_buffer;
-        wap_buffer_init(&wwd_buffer);
-        std::unique_ptr<wap_buffer, void (*)(wap_buffer*)> wap_buffer_ptr { &wwd_buffer, wap_buffer_destroy };
-        int error = wap_wwd_write(wwd, &wwd_buffer);
+        std::vector<char> wwd_buffer;
+        int error = wap_wwd_write(wwd, wap::cast_vector_to_wap_buffer(&wwd_buffer));
         if(error < 0)
-        return error;
-        file.write(wap_buffer_data(&wwd_buffer), wap_buffer_size(&wwd_buffer));
+            return error;
+        file.write(wwd_buffer.data(), wwd_buffer.size());
         if(!file.good())
             return WAP_EFILE;
         return WAP_OK;

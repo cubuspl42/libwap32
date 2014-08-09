@@ -1,10 +1,32 @@
 #include "errors.h"
+
+#include <zlib.h>
+
 #include <cassert>
 #include <iostream>
 
 std::vector<std::array<char, 128>> wap_error_context::error_context_stack;
 //char s_error_context_description[2048];
 //char *s_error_description;
+
+namespace wap {
+    Error Error::from_zlib_error(int zlib_error_code)
+    {
+        int error_code;
+        switch (zlib_error_code) {
+            case Z_BUF_ERROR:
+            case Z_DATA_ERROR:
+                error_code = WAP_EINVALIDDATA;
+                break;
+            case Z_MEM_ERROR:
+                error_code = WAP_ENOMEMORY;
+                break;
+            default:
+                error_code = WAP_ERROR;
+        }
+        return Error(error_code);
+    }
+}
 
 wap_error_context::~wap_error_context()
 {

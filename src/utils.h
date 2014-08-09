@@ -19,11 +19,6 @@ void wap_util_buffer_printf(char (&buffer)[buffer_size], const char *format, Arg
     wap_util_buffer_printf(buffer, buffer_size, format, args...);
 }
 
-int wap_util_inflate(char *out_buffer, size_t out_buffer_size,
-                       const char *in_buffer, size_t in_buffer_size);
-
-int wap_util_deflate(std::vector<char> &out_buffer, const char *in_buffer, size_t in_buffer_size);
-
 unsigned wap_util_checksum(const char *buffer, size_t buffer_size);
 
 #endif

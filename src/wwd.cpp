@@ -14,7 +14,6 @@ void wap_wwd_free(wap_wwd *wwd)
 	delete wwd;
 }
 
-
 size_t wap_wwd_get_plane_count(const wap_wwd *wwd)
 {
 	return wwd->planes.size();
