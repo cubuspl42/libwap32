@@ -6,6 +6,7 @@
 #include "utils.h"
 
 #include <algorithm>
+#include <fstream>
 #include <type_traits>
 
 namespace wap {
@@ -108,6 +109,8 @@ namespace wap {
             read_write_buffer(buffer, buffer_size);
         }
     };
+    
+    std::vector<char> read_whole_file(const char *file_path);
 }
 
 #endif

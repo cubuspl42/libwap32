@@ -189,7 +189,7 @@ static void read_header(wap::InputStream &stream, wap_wwd &wwd, wwd_offsets &off
     wwd.planes.resize(num_planes);
 }
 
-void wwd_read(wap_wwd *out_wwd, const char *wwd_buffer, size_t wwd_buffer_size)
+void wwd_read(wap_wwd &out_wwd, const char *wwd_buffer, size_t wwd_buffer_size)
 {
     wap_error_context errctx("reading wwd buffer");
     wap_wwd wwd;
@@ -215,25 +215,21 @@ void wwd_read(wap_wwd *out_wwd, const char *wwd_buffer, size_t wwd_buffer_size)
         read_main_block(stream, wwd.planes, wwd.tile_descriptions, offsets);
     }
     
-    std::swap(wwd, *out_wwd);
+    std::swap(wwd, out_wwd);
 }
 
-void wwd_open(wap_wwd *wwd, const char *file_path)
+void wwd_open(wap_wwd &wwd, const char *file_path)
 {
-    wap_error_context errctx("opening file '%s'", file_path);
-    std::ifstream file(file_path, std::ios::binary);
-    std::vector<char> wwd_buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    if(!file.good())
-        throw wap::Error(WAP_EFILE);
+    std::vector<char> wwd_buffer = wap::read_whole_file(file_path);
     wwd_read(wwd, wwd_buffer.data(), wwd_buffer.size());
 }
 
 int wap_wwd_read(wap_wwd *out_wwd, const char *wwd_buffer, size_t wwd_buffer_size)
 {
-    return wap::handle_exceptions(wwd_read, out_wwd, wwd_buffer, wwd_buffer_size);
+    return wap::handle_exceptions(wwd_read, *out_wwd, wwd_buffer, wwd_buffer_size);
 }
 
 int wap_wwd_open(wap_wwd *wwd, const char *file_path)
 {
-    return wap::handle_exceptions(wwd_open, wwd, file_path);
+    return wap::handle_exceptions(wwd_open, *wwd, file_path);
 }
