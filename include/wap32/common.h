@@ -1,7 +1,22 @@
 #ifndef wap_common_h
 #define wap_common_h
 
+#include <limits.h>
 #include <stddef.h>
+#include <stdint.h>
+
+#define WAP_INTEGER_ENCODING    (-1 & 3)
+#define WAP_SIGN_AND_MAGNITUDE  1
+#define WAP_ONES_COMPLEMENT     2
+#define WAP_TWOS_COMPLEMENT     3
+
+#if WAP_INTEGER_ENCODING != WAP_TWOS_COMPLEMENT
+#  error Support for integer encoding other than two's complement is not implemented
+#endif
+
+#if CHAR_BIT != 8
+#  error There's no support for non-8bit chars
+#endif
 
 #ifndef WAP_API
 #  ifdef _WIN32
