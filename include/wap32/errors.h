@@ -11,7 +11,7 @@ typedef enum {
     WAP_ENOMEMORY = -2, /* Out of memory */
     WAP_EFILE = -3, /* File access failed */
     WAP_EINVALIDDATA = -4, /* Input data is invalid */
-} Wap32Error;
+} wap_error_t;
 
 WAP_END_DECLS
 
