@@ -1,71 +1,66 @@
 <%
-tiles_dir = wwd.image_dir.replace('\\', '/')
-image_sets = [image_set.replace('\\', '_') for image_set in wwd.image_sets]
-image_set_map = eval(open('image_set_map.dict').read())
+	def get_image(image_set_id, index):
+		try:
+			return image_sets[image_set_id][index]
+		except KeyError:
+			return ("SADFACE", (32, 32), (0, 0))
+
+	used_images = set()
+	for obj in objects:
+		used_images.add((obj.image_set_id, obj.i))
+	for layer in layers:
+		for tile in layer.tiles:
+			if not tile.filled:
+				used_images.add((layer.image_set_id, tile.index))
 %>\
-<html>
 <style>
 div {
 	position: absolute;
+	left: 0px;
+	top: 0px;
 }
-
-.plane {
-	width: ${plane.tiles_wide*plane.tile_width}px;
+% for image_set_id, index in used_images:
+<%
+	rez_path, size, offset = get_image(image_set_id, index)
+	width, height = size
+	offset_x, offset_y = offset
+%>
+.${image_set_id}_${index} {
+	background-image: url(CLAW/${rez_path}.png);
+	width: ${width}px;
+	height: ${height}px;
+	margin-left: ${offset_x}px;
+	margin-top: ${offset_y}px;
 }
-
-.plane .tile {
-	width: ${plane.tile_width}px;
-	height: ${plane.tile_height}px;
-}
-
-.object {
-	width: auto;
-	height: auto;
-}
-
-.object img {
-	-webkit-transform: translate(-50%, -50%);
-	   -moz-transform: translate(-50%, -50%);
-        -ms-transform: translate(-50%, -50%);
-	     -o-transform: translate(-50%, -50%);
-	        transform: translate(-50%, -50%);
-}
-
-% for tile in sorted(set(plane.tiles)):
-.tile_${tile} { background-image: url(CLAW/${tiles_dir}/ACTION/${'%03d' % tile}.png) }
 % endfor
-
 </style>
-<body>
-<div class="plane">
-<div class="tiles">
-% for y in range(plane.tiles_high):
-% for x in range(plane.tiles_wide):
-<%
-tile = plane.tiles[y*plane.tiles_wide+x]
-tw = plane.tile_width
-th = plane.tile_height
-%>\
-% if tile != 0xFFFFFFFF:
-<div style="left:${x*tw}px; top:${y*th}px;" class="tile tile_${tile}"></div>
+
+% for layer in layers:
+<div style="z-index: ${layer.z_index};">
+% for tile in layer.tiles:
+    <div \
+% if not tile.filled:
+class="${layer.image_set_id}_${tile.index}" \
 % endif
-% endfor
+style="\
+% if tile.filled:
+background-color: #${hex(layer.fill_color)}; \
+% endif
+left:${tile.x*layer.tile_width}px; top:${tile.y*layer.tile_height}px"></div>
 % endfor
 </div>
-<div class="objects">
-% for obj in plane.objects:
+% endfor
+
+% for obj in objects:
 <%
-full_image_set = None
-for i, prefix in enumerate(wwd.prefixes):
-	if obj.image_set.startswith(prefix):
-		full_image_set = obj.image_set.replace(prefix, image_sets[i])
-		break
+	
 %>\
-<div style="left:${obj.x}px; top:${obj.y}px;" class="object">
-<img src="${image_set_map[full_image_set]}">
-</div>
+<div style="left:${obj.x}px; top:${obj.y}px; z-index:${obj.z_index}; transform:translate(-50%, -50%)\
+% if obj.mirrored:
+ scaleX(-1)\
+% endif
+% if obj.inverted:
+ scaleY(-1)\
+% endif
+" class="${obj.image_set_id}_${obj.i}"></div>
 % endfor
-</div>
-</div>
-</body>
-</html>
