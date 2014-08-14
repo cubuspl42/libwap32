@@ -8,43 +8,43 @@
 
 WAP_BEGIN_DECLS
 
-enum {
+typedef enum {
     WAP_WWD_FLAG_USE_Z_COORDS = 1 << 0,
     WAP_WWD_FLAG_COMPRESS     = 1 << 1,
-};
+} wap_wwd_flags_t;
 
-enum {
+typedef enum {
+    WAP_PLANE_FLAG_MAIN_PLANE       = 1 << 0, /* Only one plane should hold this flag */
+    WAP_PLANE_FLAG_NO_DRAW          = 1 << 1,
+    WAP_PLANE_FLAG_X_WRAPPING       = 1 << 2,
+    WAP_PLANE_FLAG_Y_WRAPPING       = 1 << 3,
+    WAP_PLANE_FLAG_AUTO_TILE_SIZE   = 1 << 4,
+} wap_plane_flags_t;
+
+typedef enum {
     WAP_OBJECT_ADD_FLAG_DIFFICULT       = 1 << 0,
     WAP_OBJECT_ADD_FLAG_EYE_CANDY       = 1 << 1,
     WAP_OBJECT_ADD_FLAG_HIGH_DETAIL     = 1 << 2,
     WAP_OBJECT_ADD_FLAG_MULTIPLAYER     = 1 << 3,
     WAP_OBJECT_ADD_FLAG_EXTRA_MEMORY    = 1 << 4,
     WAP_OBJECT_ADD_FLAG_FAST_CPU        = 1 << 5,
-};
+} wap_object_add_flags_t;
 
-enum {
-    WAP_PLANE_FLAG_MAIN_PLANE       = 1 << 0, /* Only one plane should hold this flag */
-    WAP_PLANE_FLAG_NO_DRAW          = 1 << 1,
-    WAP_PLANE_FLAG_X_WRAPPING       = 1 << 2,
-    WAP_PLANE_FLAG_Y_WRAPPING       = 1 << 3,
-    WAP_PLANE_FLAG_AUTO_TILE_SIZE   = 1 << 4,
-};
-
-enum {
+typedef enum {
     WAP_OBJECT_DRAW_FLAG_NO_DRAW    = 1 << 0,
     WAP_OBJECT_DRAW_FLAG_MIRROR     = 1 << 1,
     WAP_OBJECT_DRAW_FLAG_INVERT     = 1 << 2,
     WAP_OBJECT_DRAW_FLAG_FLASH      = 1 << 3,
-};
+} wap_object_draw_flags_t;
 
-enum {
+typedef enum {
     WAP_OBJECT_DYNAMIC_FLAG_NO_HIT          = 1 << 0,
     WAP_OBJECT_DYNAMIC_FLAG_ALWAYS_ACTIVE   = 1 << 1,
     WAP_OBJECT_DYNAMIC_FLAG_SAFE            = 1 << 2,
     WAP_OBJECT_DYNAMIC_FLAG_AUTO_HIT_DAMAGE = 1 << 3,
-};
+} wap_object_dynamic_flags_t;
 
-enum {
+typedef enum {
     WAP_OBJECT_USER_FLAG_1  = 1 << 0,
     WAP_OBJECT_USER_FLAG_2  = 1 << 1,
     WAP_OBJECT_USER_FLAG_3  = 1 << 2,
@@ -57,9 +57,9 @@ enum {
     WAP_OBJECT_USER_FLAG_10 = 1 << 9,
     WAP_OBJECT_USER_FLAG_11 = 1 << 10,
     WAP_OBJECT_USER_FLAG_12 = 1 << 11,
-};
+} wap_object_user_flags_t;
 
-enum {
+typedef enum {
     WAP_OBJECT_TYPE_GENERIC = 1 << 0,
     WAP_OBJECT_TYPE_PLAYER  = 1 << 1,
     WAP_OBJECT_TYPE_ENEMY   = 1 << 2,
@@ -72,20 +72,20 @@ enum {
     WAP_OBJECT_TYPE_USER2   = 1 << 9,
     WAP_OBJECT_TYPE_USER3   = 1 << 10,
     WAP_OBJECT_TYPE_USER4   = 1 << 11,
-};
+} wap_object_type_flags_t;
 
-enum {
+typedef enum {
     WAP_TILE_TYPE_SINGLE    = 1,
     WAP_TILE_TYPE_DOUBLE    = 2,
-};
+} wap_tile_type_flags_t;
 
-enum {
+typedef enum {
     WAP_TILE_ATTRIBUTE_CLEAR    = 0,
     WAP_TILE_ATTRIBUTE_SOLID    = 1 << 0,
     WAP_TILE_ATTRIBUTE_GROUND   = 1 << 1,
     WAP_TILE_ATTRIBUTE_CLIMB    = 1 << 2,
     WAP_TILE_ATTRIBUTE_DEATH    = 1 << 3,
-};
+} wap_tile_attribute_flags_t;
 
 typedef struct wap_wwd wap_wwd;
 typedef struct wap_plane wap_plane;
@@ -211,7 +211,7 @@ WAP_API wap_plane *wap_wwd_get_plane(wap_wwd *wwd, uint32_t plane_index);
 WAP_API uint32_t wap_wwd_get_tile_description_count(const wap_wwd *wwd);
 
 /* Possible error: WAP_ENOMEMORY */
-WAP_API int wap_wwd_set_tile_description_count(const wap_wwd *wwd, uint32_t count);
+WAP_API int wap_wwd_set_tile_description_count(wap_wwd *wwd, uint32_t count);
 
 WAP_API wap_tile_description *wap_wwd_get_tile_description(wap_wwd *wwd, uint32_t description_index);
 

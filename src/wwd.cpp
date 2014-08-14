@@ -41,6 +41,13 @@ unsigned wap_wwd_get_tile_description_count(const wap_wwd *wwd)
     return wwd->tile_descriptions.size();
 }
 
+int wap_wwd_set_tile_description_count(wap_wwd *wwd, unsigned count)
+{
+    return wap::handle_exceptions([=](){
+        wwd->tile_descriptions.resize(count);
+    });
+}
+
 wap_tile_description *wap_wwd_get_tile_description(wap_wwd *wwd, unsigned description_index)
 {
     return &wwd->tile_descriptions[description_index];
@@ -60,11 +67,10 @@ void wap_plane_get_map_dimensions(wap_plane *plane, unsigned *w, unsigned *h)
 int wap_plane_set_map_dimensions(wap_plane *plane, unsigned w, unsigned h)
 {
     return wap::handle_exceptions([=](){
+        plane->tiles.resize(w * h);
         plane->tiles_wide = w;
         plane->tiles_high = h;
-        plane->tiles.resize(w * h);
     });
-    
 }
 
 unsigned wap_plane_get_tile(const wap_plane *plane, unsigned x, unsigned y)
