@@ -38,7 +38,7 @@ namespace wap {
             }
             template<typename T>
             void read_write_buffer(T *buffer, size_t buffer_size) {
-                for(int i = 0; i < buffer_size; ++i)
+                for(size_t i = 0; i < buffer_size; ++i)
                     read_write_impl(buffer[i]);
             }
         public:

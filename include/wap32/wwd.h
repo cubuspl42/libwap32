@@ -80,7 +80,7 @@ typedef enum {
 } wap_tile_type_flags_t;
 
 typedef enum {
-    WAP_TILE_ATTRIBUTE_CLEAR    = 0,
+    WAP_TILE_ATTRIBUTE_CLEAR   ,
     WAP_TILE_ATTRIBUTE_SOLID    = 1 << 0,
     WAP_TILE_ATTRIBUTE_GROUND   = 1 << 1,
     WAP_TILE_ATTRIBUTE_CLIMB    = 1 << 2,
@@ -101,22 +101,22 @@ typedef struct {
 typedef struct {
     uint32_t flags; /* WAP_WWD_FLAG_ */
     /* WapWorld expects all these char buffers to be null-terminated */
-    char level_name[64];
-    char author[64];
-    char birth[64];
-    char rez_file[256];
-    char image_dir[128];
-    char pal_rez[128];
-    int32_t start_x;
-    int32_t start_y;
-    char launch_app[128];
-    char image_sets[4][128];
-    char prefixes[4][32];
+	char level_name[64];
+	char author[64];
+	char birth[64];
+	char rez_file[256];
+	char image_dir[128];
+	char pal_rez[128];
+	int32_t start_x;
+	int32_t start_y;
+	char launch_app[128];
+	char image_sets[4][128];
+	char prefixes[4][32];
 } wap_wwd_properties;
 
 typedef struct {
     uint32_t flags; /* WAP_PLANE_FLAG_ flags */
-    char name[64]; /* WapWorld expects this char buffer to be null-terminated */
+	char name[64]; /* WapWorld expects this char buffer to be null-terminated */
     uint32_t tile_width; /* tile's width in pixels */
     uint32_t tile_height; /* tile's height in pixels */
     int32_t movement_x_percent;
@@ -127,56 +127,56 @@ typedef struct {
 
 typedef struct {
     int32_t id; /* Any value is accepted by WapWorld, but a good id should be positive and unique. */
-    int32_t x;
-    int32_t y;
-    int32_t z;
-    int32_t i;
-    uint32_t add_flags; /* WAP_OBJECT_ADD_FLAG_ flags */
-    uint32_t dynamic_flags; /* WAP_OBJECT_DYNAMIC_FLAG_ flags */
-    uint32_t draw_flags; /* WAP_OBJECT_DRAW_FLAG_ flags */
-    uint32_t user_flags; /* WAP_OBJECT_USER_FLAG_ flags */
-    int32_t score;
-    int32_t points;
-    int32_t powerup;
-    int32_t damage;
-    int32_t smarts;
-    int32_t health;
-    wap_rect move_rect;
-    wap_rect hit_rect;
-    wap_rect attack_rect;
-    wap_rect clip_rect;
-    wap_rect user_rects[2];
-    int32_t user_values[8];
+	int32_t x;
+	int32_t y;
+	int32_t z;
+	int32_t i;
+	uint32_t add_flags; /* WAP_OBJECT_ADD_FLAG_ flags */
+	uint32_t dynamic_flags; /* WAP_OBJECT_DYNAMIC_FLAG_ flags */
+	uint32_t draw_flags; /* WAP_OBJECT_DRAW_FLAG_ flags */
+	uint32_t user_flags; /* WAP_OBJECT_USER_FLAG_ flags */
+	int32_t score;
+	int32_t points;
+	int32_t powerup;
+	int32_t damage;
+	int32_t smarts;
+	int32_t health;
+	wap_rect move_rect;
+	wap_rect hit_rect;
+	wap_rect attack_rect;
+	wap_rect clip_rect;
+	wap_rect user_rects[2];
+	int32_t user_values[8];
     int32_t x_min;
-    int32_t y_min;
-    int32_t x_max;
-    int32_t y_max;
-    int32_t speed_x;
-    int32_t speed_y;
-    int32_t x_tweak;
-    int32_t y_tweak;
-    int32_t counter;
-    int32_t speed;
-    int32_t width;
-    int32_t height;
-    int32_t direction;
-    int32_t face_dir;
-    int32_t time_delay;
-    int32_t frame_delay;
-    uint32_t object_type; /* WAP_OBJECT_TYPE_ single value */
-    uint32_t hit_type_flags; /* WAP_OBJECT_TYPE_ flags */
-    int32_t x_move_res;
-    int32_t y_move_res;
+	int32_t y_min;
+	int32_t x_max;
+	int32_t y_max;
+	int32_t speed_x;
+	int32_t speed_y;
+	int32_t x_tweak;
+	int32_t y_tweak;
+	int32_t counter;
+	int32_t speed;
+	int32_t width;
+	int32_t height;
+	int32_t direction;
+	int32_t face_dir;
+	int32_t time_delay;
+	int32_t frame_delay;
+	uint32_t object_type; /* WAP_OBJECT_TYPE_ single value */
+	uint32_t hit_type_flags; /* WAP_OBJECT_TYPE_ flags */
+	int32_t x_move_res;
+	int32_t y_move_res;
 } wap_object_properties;
 
 typedef struct {
-    uint32_t type; /* WAP_TILE_TYPE_ single value */
+	uint32_t type; /* WAP_TILE_TYPE_ single value */
     uint32_t width; /* in pixels */
     uint32_t height; /* in pixels */
     uint32_t inside_attrib; /* WAP_TILE_ATTRIBUTE_ */
     /* outside_attrib and rect only if type == WAP_TILE_TYPE_DOUBLE */
-    uint32_t outside_attrib; /* WAP_TILE_ATTRIBUTE_ */
-    wap_rect rect;
+	uint32_t outside_attrib; /* WAP_TILE_ATTRIBUTE_ */
+	wap_rect rect;
 } wap_tile_description;
 
 /* NULL if out of memory */

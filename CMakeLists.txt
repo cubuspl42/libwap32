@@ -9,7 +9,7 @@ file(GLOB SOURCES
     "src/*.cpp"
 )
 
-add_definitions(-DWAP32_BUILD_SHARED)
+add_definitions(-DWAP_BUILD_SHARED)
 list(APPEND CMAKE_CXX_FLAGS "-std=c++11")
 
 add_library(wap32 SHARED ${SOURCES})

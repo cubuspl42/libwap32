@@ -6,27 +6,9 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <unistd.h>
 #include <string>
 
 using namespace std;
-
-static unsigned WapMapChecksum(std::istream * psStream, int piOffset)
-{
-    int pos = psStream->tellg();
-    unsigned int length;
-    psStream->seekg (0, std::ios::end);
-    length = psStream->tellg();
-    psStream->seekg(piOffset, std::ios::beg);
-    unsigned int newCheckSum = 4294967295 - 159;
-    for(unsigned int n=piOffset; n<length; n++){
-        unsigned char buffer;
-        psStream->read((char*)&buffer, 1);
-        newCheckSum = newCheckSum - (n-(piOffset-1)) + (unsigned int)buffer;
-    }
-    psStream->seekg(pos);
-    return newCheckSum;
-}
 
 typedef unique_ptr<wap_wwd, void(*)(wap_wwd*)> unique_wwd_pointer;
 

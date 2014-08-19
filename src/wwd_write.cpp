@@ -217,8 +217,6 @@ static void write_header(wap::OutputStream &stream, const wap_wwd &wwd, const ww
 
 void wwd_write(const wap_wwd *wwd, std::vector<char> &out_wwd_buffer)
 {
-    wap_error_context errctx("writing wwd buffer");
-    
     wwd_offsets offsets;
     std::vector<wwd_plane_offsets> planes_offsets;
     calculate_offsets(offsets, planes_offsets, *wwd);
@@ -253,7 +251,6 @@ void wwd_write(const wap_wwd *wwd, std::vector<char> &out_wwd_buffer)
 
 void wwd_save(const wap_wwd *wwd, const char *file_path)
 {
-    wap_error_context errctx("saving file '%s'", file_path);
     std::ofstream file(file_path, std::ios::binary);
     if(!file.good())
         throw wap::Error(WAP_EFILE);

@@ -191,7 +191,6 @@ static void read_header(wap::InputStream &stream, wap_wwd &wwd, wwd_offsets &off
 
 void wwd_read(wap_wwd &out_wwd, const char *wwd_buffer, size_t wwd_buffer_size)
 {
-    wap_error_context errctx("reading wwd buffer");
     wap_wwd wwd;
     
     wap::InputStream stream(wwd_buffer, wwd_buffer_size);
