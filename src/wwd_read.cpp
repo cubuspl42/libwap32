@@ -149,7 +149,9 @@ static void read_tile_descriptions(wap::InputStream &stream, std::vector<wap_til
     tile_descriptions.resize(num_tile_descriptions);
     
     for(wap_tile_description &desc : tile_descriptions) {
-        stream.read(desc.type, 0, desc.width, desc.height);
+        uint32_t unknown;
+        stream.read(desc.type);
+        stream.read(unknown, desc.width, desc.height);
         if(desc.type == WAP_TILE_TYPE_SINGLE) {
             stream.read(desc.inside_attrib);
         } else {
@@ -178,10 +180,11 @@ static void read_header(wap::InputStream &stream, wap_wwd &wwd, wwd_offsets &off
         throw wap::Error(WAP_EINVALIDDATA);
     
     wap_wwd_properties &wwdp = wwd.properties;
+    uint32_t unknown;
     uint32_t num_planes;
     
     stream.read(0, wwdp.flags, 0, wwdp.level_name, wwdp.author, wwdp.birth, wwdp.rez_file, wwdp.image_dir, wwdp.pal_rez,
-                wwdp.start_x, wwdp.start_y, 0, num_planes, offsets.main_block_offset, offsets.tile_descriptions_offset,
+                wwdp.start_x, wwdp.start_y, unknown, num_planes, offsets.main_block_offset, offsets.tile_descriptions_offset,
                 decompressed_main_block_size, wwd.checksum, 0, wwdp.launch_app, wwdp.image_sets[0], wwdp.image_sets[1],
                 wwdp.image_sets[2], wwdp.image_sets[3], wwdp.prefixes[0], wwdp.prefixes[1], wwdp.prefixes[2],
                 wwdp.prefixes[3]);
@@ -201,7 +204,8 @@ void wwd_read(wap_wwd &out_wwd, const char *wwd_buffer, size_t wwd_buffer_size)
     read_header(stream, wwd, offsets, decompressed_main_block_size);
     
     if(wwdp.flags & WAP_WWD_FLAG_COMPRESS) {
-        std::vector<char> decompressed_buffer(offsets.main_block_offset + decompressed_main_block_size);
+        offsets.eof_offset = offsets.main_block_offset + decompressed_main_block_size;
+        std::vector<char> decompressed_buffer(offsets.eof_offset);
         memcpy(decompressed_buffer.data(), wwd_buffer, offsets.main_block_offset);
         const char *compressed_main_block = wwd_buffer + offsets.main_block_offset;
         size_t compressed_main_block_size = wwd_buffer_size - offsets.main_block_offset;
@@ -211,6 +215,7 @@ void wwd_read(wap_wwd &out_wwd, const char *wwd_buffer, size_t wwd_buffer_size)
         wap::InputStream stream_decompressed(&decompressed_buffer[0], decompressed_buffer.size(), stream.tell());
         read_main_block(stream_decompressed, wwd.planes, wwd.tile_descriptions, offsets);
     } else {
+        offsets.eof_offset = wwd_buffer_size;
         read_main_block(stream, wwd.planes, wwd.tile_descriptions, offsets);
     }
     

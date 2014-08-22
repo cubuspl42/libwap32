@@ -20,7 +20,7 @@ for header in _libwap32_headers:
         header_content = _preprocess_lshifts(header_content)
         _ffi.cdef(header_content)
 
-_libwap32 = _ffi.dlopen('../../build/Debug/libwap32.dylib')
+_libwap32 = _ffi.dlopen('../../build/Release/libwap32.dylib')
 
 _exception_map = {
     _libwap32.WAP_ENOMEMORY:      MemoryError,
@@ -227,6 +227,7 @@ class Plane:
         self._super = wwd
         self._cdata = plane_cdata
         self._properties = _libwap32.wap_plane_get_properties(self._cdata)
+        self._dimensions = _ffi.new("uint32_t[2]")
     def get_tile(self, xy):
         self._check_map_bounds(xy)
         return _libwap32.wap_plane_get_tile(self._cdata, xy[0], xy[1])
@@ -235,9 +236,8 @@ class Plane:
         return _libwap32.wap_plane_set_tile(self._cdata, xy[0], xy[1], tile)
     @property
     def size(self):
-        dimensions = _ffi.new("uint32_t[2]")
-        _libwap32.wap_plane_get_map_dimensions(self._cdata, dimensions, dimensions+1)
-        return (dimensions[0], dimensions[1])
+        _libwap32.wap_plane_get_map_dimensions(self._cdata, self._dimensions, self._dimensions+1)
+        return (self._dimensions[0], self._dimensions[1])
     @size.setter
     def size(self, wh):
         _handle_error(_libwap32.wap_plane_set_map_dimensions(self._cdata, wh[0], wh[1]))

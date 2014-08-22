@@ -99,7 +99,7 @@ typedef struct {
 } wap_rect;
 
 typedef struct {
-    uint32_t flags; /* WAP_WWD_FLAG_ */
+    uint32_t flags; /* WAP_WWD_FLAG_ flags  */
     /* WapWorld expects all these char buffers to be null-terminated */
 	char level_name[64];
 	char author[64];
@@ -121,7 +121,7 @@ typedef struct {
     uint32_t tile_height; /* tile's height in pixels */
     int32_t movement_x_percent;
     int32_t movement_y_percent;
-    uint32_t fill_color; /* TODO: introduce wap_color struct */
+    uint32_t fill_color;
     int32_t z_coord;
 } wap_plane_properties;
 
