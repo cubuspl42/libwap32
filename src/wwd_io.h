@@ -4,7 +4,7 @@
 #include <vector>
 
 enum {
-	WAP_WWD_HEADER_SIZE = 1524,
+    WAP_WWD_HEADER_SIZE = 1524,
     WAP_WWD_PLANE_DESCRIPTION_SIZE = 160,
     WAP_WWD_OBJECT_DESCRIPTION_SIZE = 284,
 };
@@ -18,6 +18,5 @@ struct wwd_offsets {
     unsigned tile_descriptions_offset;
     unsigned eof_offset;
 };
-
 
 #endif
