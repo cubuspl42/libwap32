@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.0)
 project(libwap32)
 
+set( WAP_BUILD_STATIC true CACHE BOOL "Static build." )
+
 include_directories("include")
 file(GLOB SOURCES
     "include/wap32.h"
@@ -21,13 +23,13 @@ if(ZLIB_FOUND)
     target_link_libraries(wap32 ${ZLIB_LIBRARIES})
 endif(ZLIB_FOUND)
 
-add_subdirectory(tests)
-enable_testing()
-add_test(
-    NAME wwd
-    COMMAND test_wwd RETAIL01_nocompress.WWD
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/wwd_files
-)
+#add_subdirectory(tests)
+#enable_testing()
+#add_test(
+#    NAME wwd
+#    COMMAND test_wwd RETAIL01_nocompress.WWD
+#    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/wwd_files
+#)
 
 set(${PROJECT_NAME}_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include
                           ${ZLIB_INCLUDE_DIRS}
