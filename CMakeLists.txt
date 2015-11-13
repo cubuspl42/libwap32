@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.0)
 project(libwap32)
 
 include_directories("include")
@@ -28,4 +28,8 @@ add_test(
     COMMAND test_wwd RETAIL01_nocompress.WWD
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/tests/wwd_files
 )
-            
+
+set(${PROJECT_NAME}_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include
+                          ${ZLIB_INCLUDE_DIRS}
+    CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE)
+ 
