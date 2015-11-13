@@ -10,51 +10,50 @@ WAP_BEGIN_DECLS
 
 typedef enum {
     WAP_WWD_FLAG_USE_Z_COORDS = 1 << 0,
-    WAP_WWD_FLAG_COMPRESS = 1 << 1,
+    WAP_WWD_FLAG_COMPRESS     = 1 << 1,
 } wap_wwd_flags_t;
 
 typedef enum {
-    WAP_PLANE_FLAG_MAIN_PLANE = 1
-                                << 0, /* Only one plane should hold this flag */
-    WAP_PLANE_FLAG_NO_DRAW = 1 << 1,
-    WAP_PLANE_FLAG_X_WRAPPING = 1 << 2,
-    WAP_PLANE_FLAG_Y_WRAPPING = 1 << 3,
+    WAP_PLANE_FLAG_MAIN_PLANE     = 1 << 0,
+    WAP_PLANE_FLAG_NO_DRAW        = 1 << 1,
+    WAP_PLANE_FLAG_X_WRAPPING     = 1 << 2,
+    WAP_PLANE_FLAG_Y_WRAPPING     = 1 << 3,
     WAP_PLANE_FLAG_AUTO_TILE_SIZE = 1 << 4,
 } wap_plane_flags_t;
 
 typedef enum {
-    WAP_OBJECT_ADD_FLAG_DIFFICULT = 1 << 0,
-    WAP_OBJECT_ADD_FLAG_EYE_CANDY = 1 << 1,
-    WAP_OBJECT_ADD_FLAG_HIGH_DETAIL = 1 << 2,
-    WAP_OBJECT_ADD_FLAG_MULTIPLAYER = 1 << 3,
+    WAP_OBJECT_ADD_FLAG_DIFFICULT    = 1 << 0,
+    WAP_OBJECT_ADD_FLAG_EYE_CANDY    = 1 << 1,
+    WAP_OBJECT_ADD_FLAG_HIGH_DETAIL  = 1 << 2,
+    WAP_OBJECT_ADD_FLAG_MULTIPLAYER  = 1 << 3,
     WAP_OBJECT_ADD_FLAG_EXTRA_MEMORY = 1 << 4,
-    WAP_OBJECT_ADD_FLAG_FAST_CPU = 1 << 5,
+    WAP_OBJECT_ADD_FLAG_FAST_CPU     = 1 << 5,
 } wap_object_add_flags_t;
 
 typedef enum {
     WAP_OBJECT_DRAW_FLAG_NO_DRAW = 1 << 0,
-    WAP_OBJECT_DRAW_FLAG_MIRROR = 1 << 1,
-    WAP_OBJECT_DRAW_FLAG_INVERT = 1 << 2,
-    WAP_OBJECT_DRAW_FLAG_FLASH = 1 << 3,
+    WAP_OBJECT_DRAW_FLAG_MIRROR  = 1 << 1,
+    WAP_OBJECT_DRAW_FLAG_INVERT  = 1 << 2,
+    WAP_OBJECT_DRAW_FLAG_FLASH   = 1 << 3,
 } wap_object_draw_flags_t;
 
 typedef enum {
-    WAP_OBJECT_DYNAMIC_FLAG_NO_HIT = 1 << 0,
-    WAP_OBJECT_DYNAMIC_FLAG_ALWAYS_ACTIVE = 1 << 1,
-    WAP_OBJECT_DYNAMIC_FLAG_SAFE = 1 << 2,
+    WAP_OBJECT_DYNAMIC_FLAG_NO_HIT          = 1 << 0,
+    WAP_OBJECT_DYNAMIC_FLAG_ALWAYS_ACTIVE   = 1 << 1,
+    WAP_OBJECT_DYNAMIC_FLAG_SAFE            = 1 << 2,
     WAP_OBJECT_DYNAMIC_FLAG_AUTO_HIT_DAMAGE = 1 << 3,
 } wap_object_dynamic_flags_t;
 
 typedef enum {
-    WAP_OBJECT_USER_FLAG_1 = 1 << 0,
-    WAP_OBJECT_USER_FLAG_2 = 1 << 1,
-    WAP_OBJECT_USER_FLAG_3 = 1 << 2,
-    WAP_OBJECT_USER_FLAG_4 = 1 << 3,
-    WAP_OBJECT_USER_FLAG_5 = 1 << 4,
-    WAP_OBJECT_USER_FLAG_6 = 1 << 5,
-    WAP_OBJECT_USER_FLAG_7 = 1 << 6,
-    WAP_OBJECT_USER_FLAG_8 = 1 << 7,
-    WAP_OBJECT_USER_FLAG_9 = 1 << 8,
+    WAP_OBJECT_USER_FLAG_1  = 1 << 0,
+    WAP_OBJECT_USER_FLAG_2  = 1 << 1,
+    WAP_OBJECT_USER_FLAG_3  = 1 << 2,
+    WAP_OBJECT_USER_FLAG_4  = 1 << 3,
+    WAP_OBJECT_USER_FLAG_5  = 1 << 4,
+    WAP_OBJECT_USER_FLAG_6  = 1 << 5,
+    WAP_OBJECT_USER_FLAG_7  = 1 << 6,
+    WAP_OBJECT_USER_FLAG_8  = 1 << 7,
+    WAP_OBJECT_USER_FLAG_9  = 1 << 8,
     WAP_OBJECT_USER_FLAG_10 = 1 << 9,
     WAP_OBJECT_USER_FLAG_11 = 1 << 10,
     WAP_OBJECT_USER_FLAG_12 = 1 << 11,
@@ -62,17 +61,17 @@ typedef enum {
 
 typedef enum {
     WAP_OBJECT_TYPE_GENERIC = 1 << 0,
-    WAP_OBJECT_TYPE_PLAYER = 1 << 1,
-    WAP_OBJECT_TYPE_ENEMY = 1 << 2,
+    WAP_OBJECT_TYPE_PLAYER  = 1 << 1,
+    WAP_OBJECT_TYPE_ENEMY   = 1 << 2,
     WAP_OBJECT_TYPE_POWERUP = 1 << 3,
-    WAP_OBJECT_TYPE_SHOT = 1 << 4,
-    WAP_OBJECT_TYPE_PSHOT = 1 << 5,
-    WAP_OBJECT_TYPE_ESHOT = 1 << 6,
+    WAP_OBJECT_TYPE_SHOT    = 1 << 4,
+    WAP_OBJECT_TYPE_PSHOT   = 1 << 5,
+    WAP_OBJECT_TYPE_ESHOT   = 1 << 6,
     WAP_OBJECT_TYPE_SPECIAL = 1 << 7,
-    WAP_OBJECT_TYPE_USER1 = 1 << 8,
-    WAP_OBJECT_TYPE_USER2 = 1 << 9,
-    WAP_OBJECT_TYPE_USER3 = 1 << 10,
-    WAP_OBJECT_TYPE_USER4 = 1 << 11,
+    WAP_OBJECT_TYPE_USER1   = 1 << 8,
+    WAP_OBJECT_TYPE_USER2   = 1 << 9,
+    WAP_OBJECT_TYPE_USER3   = 1 << 10,
+    WAP_OBJECT_TYPE_USER4   = 1 << 11,
 } wap_object_type_flags_t;
 
 typedef enum {
@@ -82,10 +81,10 @@ typedef enum {
 
 typedef enum {
     WAP_TILE_ATTRIBUTE_CLEAR,
-    WAP_TILE_ATTRIBUTE_SOLID = 1 << 0,
+    WAP_TILE_ATTRIBUTE_SOLID  = 1 << 0,
     WAP_TILE_ATTRIBUTE_GROUND = 1 << 1,
-    WAP_TILE_ATTRIBUTE_CLIMB = 1 << 2,
-    WAP_TILE_ATTRIBUTE_DEATH = 1 << 3,
+    WAP_TILE_ATTRIBUTE_CLIMB  = 1 << 2,
+    WAP_TILE_ATTRIBUTE_DEATH  = 1 << 3,
 } wap_tile_attribute_flags_t;
 
 typedef struct wap_wwd wap_wwd;
