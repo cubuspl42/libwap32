@@ -11,11 +11,11 @@
 #define WAP_TWOS_COMPLEMENT     3
 
 #if WAP_INTEGER_ENCODING != WAP_TWOS_COMPLEMENT
-#  error Support for integer encoding other than two's complement is not implemented
+#  error Support for integer encoding other than two’s complement is not implemented
 #endif
 
 #if CHAR_BIT != 8
-#  error There's no support for non-8bit chars
+#  error There is no support for non-8bit chars
 #endif
 
 #ifndef WAP_API
