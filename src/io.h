@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <fstream>
 #include <type_traits>
+#include <cstring>
 
 namespace wap {
 namespace detail {
